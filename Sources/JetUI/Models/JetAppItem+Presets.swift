@@ -12,7 +12,7 @@ extension JetAppItem {
     public static let companyApps: [JetAppItem] = [
         JetAppItem(
             name: "TimeStamp",
-            localIconName: "TimeStamp_icon", // 确保这些图片都在 JetUI 的 Resources 文件夹里
+            localIconName: "TimeStamp_icon",
             actionURL: URL(string: "https://apps.apple.com/app/timestamp-id")!
         ),
         JetAppItem(
