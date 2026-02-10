@@ -76,15 +76,9 @@ public enum JetSettingsStyle {
     case standard
 }
 
-// MARK: - Subscription Config
-/// 订阅配置
-public struct JetSubscriptionConfig {
-    /// 产品 ID 列表
-    public let productIds: [String]
-    /// Pro 产品 ID 集合
-    public let proProductIds: Set<String>
-    /// 订阅组 ID
-    public let groupId: String
+// MARK: - Settings Subscription UI Config
+/// 设置页面的会员卡 UI 配置（与 JetSubscriptionConfig 分离，避免名称冲突）
+public struct JetSettingsSubscriptionUIConfig {
     /// 会员卡背景图片名称（可选）
     public let membershipCardImage: String?
     /// 会员卡标题
@@ -93,16 +87,10 @@ public struct JetSubscriptionConfig {
     public let membershipSubtitle: String
     
     public init(
-        productIds: [String],
-        proProductIds: Set<String>,
-        groupId: String,
         membershipCardImage: String? = nil,
         membershipTitle: String = "Pro",
         membershipSubtitle: String = "Unlock all premium features"
     ) {
-        self.productIds = productIds
-        self.proProductIds = proProductIds
-        self.groupId = groupId
         self.membershipCardImage = membershipCardImage
         self.membershipTitle = membershipTitle
         self.membershipSubtitle = membershipSubtitle

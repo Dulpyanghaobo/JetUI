@@ -11,13 +11,14 @@ import OSLog
 // MARK: - 日志类别
 
 public enum LogCategory: String {
-    case general   = "General"
-    case `import`  = "Import"      // 文件 / 图片导入
-    case thumbnail = "Thumbnail"   // 缩略图生成
-    case network   = "Network"     // 网络请求
-    case database  = "Database"    // 持久化 / CoreData
-    case ui        = "UI"          // 界面事件
-    case auth      = "Auth"        // 认证相关
+    case general      = "General"
+    case `import`     = "Import"      // 文件 / 图片导入
+    case thumbnail    = "Thumbnail"   // 缩略图生成
+    case network      = "Network"     // 网络请求
+    case database     = "Database"    // 持久化 / CoreData
+    case ui           = "UI"          // 界面事件
+    case auth         = "Auth"        // 认证相关
+    case subscription = "Subscription" // 订阅相关
 
     public init(_ rawValue: String) {
         self = LogCategory(rawValue: rawValue) ?? .general

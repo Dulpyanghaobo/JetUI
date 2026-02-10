@@ -20,6 +20,10 @@ let package = Package(
         .package(url: "https://github.com/Moya/Moya.git", from: "15.0.0"),
         // KeychainAccess for secure token storage
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2"),
+        // Lottie for animations
+        .package(url: "https://github.com/airbnb/lottie-ios.git", from: "4.4.0"),
+        // Firebase SDK for analytics
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -28,10 +32,20 @@ let package = Package(
             name: "JetUI",
             dependencies: [
                 "Moya",
-                "KeychainAccess"
+                "KeychainAccess",
+                .product(name: "Lottie", package: "lottie-ios"),
+                // Firebase products
+                .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseMessaging", package: "firebase-ios-sdk"),
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
             ],
             exclude: [
-                "Settings/README.md"
+                "Features/Settings/README.md"
+            ],
+            resources: [
+                .process("Resources/Media.xcassets")
             ]
         ),
         .testTarget(

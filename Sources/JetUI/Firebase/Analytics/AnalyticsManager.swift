@@ -2,23 +2,11 @@
 //  AnalyticsManager.swift
 //  JetUI
 //
-//  分析管理器 - 提供统一的事件追踪接口
-//  支持 Firebase Analytics 或其他分析后端
+//  分析管理器 - 直接集成 Firebase Analytics
 //
 
 import Foundation
-
-// MARK: - Analytics Provider Protocol
-
-/// 分析后端协议 - 由宿主 App 实现具体的分析 SDK 调用
-public protocol AnalyticsProvider {
-    /// 记录事件
-    func logEvent(_ name: String, parameters: [String: Any]?)
-    /// 设置用户属性
-    func setUserProperty(_ value: String?, forName name: String)
-    /// 记录屏幕浏览
-    func logScreen(_ screenName: String, screenClass: String)
-}
+import FirebaseAnalytics
 
 // MARK: - Analytics Context
 
@@ -51,16 +39,16 @@ public struct AnalyticsContext {
 
 // MARK: - Analytics Manager
 
-/// 分析管理器
+/// 分析管理器 - 直接使用 Firebase Analytics
 public enum AnalyticsManager {
     
     // MARK: - Configuration
     
-    /// 分析提供者（由宿主 App 注入）
-    public static var provider: AnalyticsProvider?
-    
     /// 上下文
     private static var ctx = AnalyticsContext()
+    
+    /// 是否启用分析（默认启用）
+    public static var isEnabled: Bool = true
     
     /// 更新上下文
     public static func updateContext(_ modifier: (inout AnalyticsContext) -> Void) {
@@ -74,7 +62,8 @@ public enum AnalyticsManager {
     
     /// 记录事件
     public static func logEvent(_ name: String, parameters: [String: Any]? = nil) {
-        provider?.logEvent(name, parameters: ctx.merged(parameters))
+        guard isEnabled else { return }
+        Analytics.logEvent(name, parameters: ctx.merged(parameters))
     }
     
     /// 采样记录事件
@@ -85,12 +74,29 @@ public enum AnalyticsManager {
     
     /// 记录屏幕浏览
     public static func logScreen(_ screen: String) {
-        provider?.logScreen(screen, screenClass: "SwiftUI")
+        guard isEnabled else { return }
+        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+            AnalyticsParameterScreenName: screen,
+            AnalyticsParameterScreenClass: "SwiftUI"
+        ])
     }
     
     /// 设置用户属性
     public static func setUserProperty(_ value: String?, forName name: String) {
-        provider?.setUserProperty(value, forName: name)
+        guard isEnabled else { return }
+        Analytics.setUserProperty(value, forName: name)
+    }
+    
+    /// 设置用户 ID
+    public static func setUserID(_ userID: String?) {
+        guard isEnabled else { return }
+        Analytics.setUserID(userID)
+    }
+    
+    /// 设置分析收集状态
+    public static func setAnalyticsCollectionEnabled(_ enabled: Bool) {
+        Analytics.setAnalyticsCollectionEnabled(enabled)
+        isEnabled = enabled
     }
     
     // MARK: - Helper Methods
@@ -233,6 +239,134 @@ public enum AnalyticsManager {
             "category": category,
             "message": message,
             "fatal": fatal
+        ])
+    }
+    
+    // MARK: - Firebase Standard Events
+    
+    /// 记录登录事件
+    public static func logLogin(method: String) {
+        logEvent(AnalyticsEventLogin, parameters: [
+            AnalyticsParameterMethod: method
+        ])
+    }
+    
+    /// 记录注册事件
+    public static func logSignUp(method: String) {
+        logEvent(AnalyticsEventSignUp, parameters: [
+            AnalyticsParameterMethod: method
+        ])
+    }
+    
+    /// 记录搜索事件
+    public static func logSearch(searchTerm: String) {
+        logEvent(AnalyticsEventSearch, parameters: [
+            AnalyticsParameterSearchTerm: searchTerm
+        ])
+    }
+    
+    /// 记录分享事件
+    public static func logShare(contentType: String, itemId: String, method: String) {
+        logEvent(AnalyticsEventShare, parameters: [
+            AnalyticsParameterContentType: contentType,
+            AnalyticsParameterItemID: itemId,
+            AnalyticsParameterMethod: method
+        ])
+    }
+    
+    /// 记录选择内容事件
+    public static func logSelectContent(contentType: String, itemId: String) {
+        logEvent(AnalyticsEventSelectContent, parameters: [
+            AnalyticsParameterContentType: contentType,
+            AnalyticsParameterItemID: itemId
+        ])
+    }
+    
+    /// 记录教程开始
+    public static func logTutorialBegin() {
+        logEvent(AnalyticsEventTutorialBegin)
+    }
+    
+    /// 记录教程完成
+    public static func logTutorialComplete() {
+        logEvent(AnalyticsEventTutorialComplete)
+    }
+    
+    /// 记录应用打开
+    public static func logAppOpen() {
+        logEvent(AnalyticsEventAppOpen)
+    }
+    
+    // MARK: - App Specific Events
+    
+    /// 记录水印应用事件
+    public static func logWatermarkApplied(templateId: String?, isCustom: Bool) {
+        logEvent("watermark_applied", parameters: [
+            "template_id": templateId ?? "none",
+            "is_custom": isCustom
+        ])
+    }
+    
+    /// 记录滤镜应用事件
+    public static func logFilterApplied(filterName: String) {
+        logEvent("filter_applied", parameters: [
+            "filter_name": filterName
+        ])
+    }
+    
+    /// 记录相册访问事件
+    public static func logGalleryAccess(source: String) {
+        logEvent("gallery_access", parameters: [
+            "source": source
+        ])
+    }
+    
+    /// 记录视频录制事件
+    public static func logVideoRecording(duration: Double, hasWatermark: Bool) {
+        logEvent("video_recording", parameters: [
+            "duration_s": duration,
+            "has_watermark": hasWatermark
+        ])
+    }
+    
+    /// 记录模板收藏事件
+    public static func logTemplateFavorite(templateId: String, action: String) {
+        logEvent("template_favorite", parameters: [
+            "template_id": templateId,
+            "action": action // "add" or "remove"
+        ])
+    }
+    
+    /// 记录签到事件
+    public static func logDailySignIn(day: Int, streak: Int) {
+        logEvent("daily_sign_in", parameters: [
+            "day": day,
+            "streak": streak
+        ])
+    }
+    
+    /// 记录任务完成事件
+    public static func logTaskComplete(taskId: String, taskType: String, reward: Int) {
+        logEvent("task_complete", parameters: [
+            "task_id": taskId,
+            "task_type": taskType,
+            "reward": reward
+        ])
+    }
+    
+    /// 记录等级提升事件
+    public static func logLevelUp(newLevel: Int, totalXP: Int) {
+        logEvent("level_up", parameters: [
+            "new_level": newLevel,
+            "total_xp": totalXP
+        ])
+    }
+    
+    /// 记录成就解锁事件
+    public static func logAchievementUnlock(achievementId: String, achievementName: String) {
+        logEvent("achievement_unlock", parameters: [
+            "achievement_id": achievementId,
+            "achievement_name": achievementName
         ])
     }
 }
