@@ -17,7 +17,16 @@ public struct JetTrialPaywallView: View {
     
     // MARK: - Properties
     
-    @StateObject private var vm: JetPaywallViewModel
+    /// 外部注入的 ViewModel（优先使用）
+    private var externalViewModel: JetPaywallViewModel?
+    
+    /// 内部创建的 ViewModel（当未提供外部 VM 时使用）
+    @StateObject private var internalViewModel = JetPaywallViewModel()
+    
+    /// 统一的 ViewModel 访问计算属性
+    private var vm: JetPaywallViewModel {
+        externalViewModel ?? internalViewModel
+    }
     
     @State private var didLogView = false
     @State private var restoreTapPending = false
@@ -25,6 +34,7 @@ public struct JetTrialPaywallView: View {
     
     private let config: JetTrialPaywallConfig
     private let onSuccess: () -> Void
+    private let onDismiss: (() -> Void)?
     
     // MARK: - Computed Properties
     
@@ -34,16 +44,59 @@ public struct JetTrialPaywallView: View {
         return plan.isYearly
     }
     
-    // MARK: - Initializer
+    // MARK: - Initializers
     
+    /// 使用 JetTrialPaywallConfig 初始化（支持外部注入 ViewModel）
+    /// - Parameters:
+    ///   - viewModel: 外部传入的 ViewModel（可选，不传则创建新的）
+    ///   - config: Trial Paywall 配置
+    ///   - onSuccess: 购买成功回调
+    ///   - onDismiss: 关闭回调
+    public init(
+        viewModel: JetPaywallViewModel? = nil,
+        config: JetTrialPaywallConfig,
+        onSuccess: @escaping () -> Void = {},
+        onDismiss: (() -> Void)? = nil
+    ) {
+        self.externalViewModel = viewModel
+        self.config = config
+        self.onSuccess = onSuccess
+        self.onDismiss = onDismiss
+    }
+    
+    /// 使用旧的初始化方式保持向后兼容
+    /// - Parameters:
+    ///   - config: Trial Paywall 配置
+    ///   - subscriptionConfig: 订阅配置（已废弃，改用全局配置）
+    ///   - onSuccess: 购买成功回调
+    @available(*, deprecated, message: "Use init(viewModel:config:onSuccess:onDismiss:) instead")
     public init(
         config: JetTrialPaywallConfig,
         subscriptionConfig: JetSubscriptionConfig,
         onSuccess: @escaping () -> Void = {}
     ) {
+        self.externalViewModel = nil
         self.config = config
         self.onSuccess = onSuccess
-        self._vm = StateObject(wrappedValue: JetPaywallViewModel())
+        self.onDismiss = nil
+    }
+    
+    /// 使用 JetPaywallContent 初始化
+    /// - Parameters:
+    ///   - viewModel: 外部传入的 ViewModel（可选，不传则创建新的）
+    ///   - content: 统一的内容容器
+    ///   - onSuccess: 购买成功回调
+    ///   - onDismiss: 关闭回调
+    public init(
+        viewModel: JetPaywallViewModel? = nil,
+        content: JetPaywallContent,
+        onSuccess: @escaping () -> Void = {},
+        onDismiss: (() -> Void)? = nil
+    ) {
+        self.externalViewModel = viewModel
+        self.config = JetTrialPaywallConfig(from: content)
+        self.onSuccess = onSuccess
+        self.onDismiss = onDismiss
     }
     
     // MARK: - Body
@@ -132,6 +185,7 @@ private extension JetTrialPaywallView {
                     "action": "dismiss",
                     "source": "header_close"
                 ])
+                onDismiss?()
                 dismiss()
             }) {
                 Image(systemName: "xmark")
@@ -550,6 +604,38 @@ public struct JetTrialPaywallConfig {
         self.trialSteps = trialSteps
         self.benefits = benefits
     }
+    
+    // MARK: - Conversion from JetPaywallContent
+    
+    /// 从 JetPaywallContent 创建配置
+    /// - Parameter content: 统一的内容容器
+    /// - Returns: JetTrialPaywallConfig 实例
+    public init(from content: JetPaywallContent) {
+        self.backgroundColor = content.backgroundColor
+        self.accentColor = content.accentColor
+        self.trialTitle = content.brandTitle
+        self.lifetimeTitle = content.brandTitle
+        self.restoreButtonTitle = content.restoreText
+        self.continueButtonTitle = content.continueText
+        self.processingTitle = content.processingText
+        self.autoRenewalTip = "Auto-renewable. Cancel anytime."
+        self.lifetimeTip = "One-time purchase, valid for life."
+        self.savePercentFormat = "Save %d%%"
+        self.privacyPolicyURL = content.privacyPolicyURL ?? URL(string: "https://example.com/privacy")!
+        self.privacyPolicyTitle = content.privacyText
+        self.termsURL = content.termsURL ?? URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
+        self.termsTitle = content.termsText
+        
+        // 转换 Timeline Steps
+        self.trialSteps = content.timelineSteps.map { step in
+            TrialStep(iconName: step.icon, title: step.title, message: step.subtitle)
+        }
+        
+        // 转换 Benefits
+        self.benefits = content.complexBenefits.map { benefit in
+            Benefit(iconName: benefit.icon, title: benefit.title)
+        }
+    }
 }
 
 // MARK: - Preview
@@ -570,8 +656,7 @@ struct JetTrialPaywallView_Previews: PreviewProvider {
                     .init(iconName: "crown.fill", title: "All Premium Features"),
                     .init(iconName: "nosign", title: "No Ads")
                 ]
-            ),
-            subscriptionConfig: .empty
+            )
         )
     }
 }

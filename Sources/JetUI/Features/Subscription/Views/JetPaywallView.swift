@@ -99,6 +99,30 @@ public struct JetPaywallConfiguration {
     public static var `default`: JetPaywallConfiguration {
         JetPaywallConfiguration()
     }
+    
+    // MARK: - Conversion from JetPaywallContent
+    
+    /// 从 JetPaywallContent 创建配置
+    /// - Parameter content: 统一的内容容器
+    /// - Returns: JetPaywallConfiguration 实例
+    public init(from content: JetPaywallContent) {
+        self.accentColor = content.accentColor
+        self.brandTitle = content.brandTitle
+        self.highlightKeyword = content.highlightKeyword
+        self.benefits = content.benefits
+        self.backgroundImageName = content.backgroundImageName
+        self.restoreText = content.restoreText
+        self.continueText = content.continueText
+        self.processingText = content.processingText
+        self.retryText = content.retryText
+        self.loadFailedText = content.loadFailedText
+        self.autoRenewHint = "Auto-renewable. Cancel anytime."
+        self.privacyPolicyURL = content.privacyPolicyURL
+        self.termsURL = content.termsURL
+        self.privacyPolicyText = content.privacyText
+        self.termsText = content.termsText
+        self.savePercentFormat = { "Save \($0)%" }
+    }
 }
 
 // MARK: - Paywall View
@@ -128,7 +152,7 @@ public struct JetPaywallView: View {
     
     // MARK: - Initializers
     
-    /// 使用外部 ViewModel 初始化
+    /// 使用外部 ViewModel 初始化（推荐方式）
     /// - Parameters:
     ///   - viewModel: 外部传入的 ViewModel
     ///   - configuration: Paywall 配置
@@ -143,6 +167,26 @@ public struct JetPaywallView: View {
         self.externalViewModel = viewModel
         self._internalViewModel = StateObject(wrappedValue: viewModel)
         self.configuration = configuration
+        self.onSuccess = onSuccess
+        self.onDismiss = onDismiss
+    }
+    
+    /// 使用 JetPaywallContent 初始化
+    /// - Parameters:
+    ///   - viewModel: 外部传入的 ViewModel（可选，不传则创建新的）
+    ///   - content: 统一的内容容器
+    ///   - onSuccess: 购买成功回调
+    ///   - onDismiss: 关闭回调
+    public init(
+        viewModel: JetPaywallViewModel? = nil,
+        content: JetPaywallContent,
+        onSuccess: @escaping () -> Void = {},
+        onDismiss: (() -> Void)? = nil
+    ) {
+        let vm = viewModel ?? JetPaywallViewModel()
+        self.externalViewModel = viewModel
+        self._internalViewModel = StateObject(wrappedValue: vm)
+        self.configuration = JetPaywallConfiguration(from: content)
         self.onSuccess = onSuccess
         self.onDismiss = onDismiss
     }
