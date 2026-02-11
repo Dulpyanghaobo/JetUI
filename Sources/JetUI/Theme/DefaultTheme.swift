@@ -42,6 +42,25 @@ public struct DefaultColorPalette: JetColorPalette {
     public var gray500: Color { Color(hex: 0x8C8C8C) }
     public var gray300: Color { Color(hex: 0xD9D9D9) }
     public var gray100: Color { Color(hex: 0x757575) }
+    
+    // MARK: Extended Colors (App-specific defaults)
+    public var proGold: Color { Color(hex: 0xFFA800) }           // Pro/Premium gold
+    public var goldAccent: Color { Color(hex: 0xFFD700) }        // Gold accent
+    public var goldDark: Color { Color(hex: 0xDB9300) }          // Dark gold
+    public var orangeAccent: Color { Color(hex: 0xFF6B00) }      // Orange accent
+    
+    public var accentBlue: Color { Color(hex: 0x4A90E2) }        // XP/Progress blue
+    public var growthGreen: Color { Color(hex: 0x50C878) }       // Growth/Success green
+    
+    public var premiumPurple: Color { Color(hex: 0x8B5CF6) }     // Premium purple
+    public var linkBlue: Color { Color(hex: 0x3B82F6) }          // Link blue
+    
+    public var cardDark: Color { Color(hex: 0x1C1C1E) }          // Dark card background
+    public var surfaceLight: Color { Color(hex: 0x2A2A2A) }      // Light surface
+    public var surfaceDark: Color { Color(hex: 0x151515) }       // Dark surface
+    
+    public var pointsYellow: Color { Color(hex: 0xFBBF24) }      // Points yellow
+    public var mintGreen: Color { Color(hex: 0x10B981) }         // Mint green
 }
 
 // MARK: - Default Typography

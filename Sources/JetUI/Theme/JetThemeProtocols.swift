@@ -58,6 +58,38 @@ public protocol JetColorPalette {
     var gray300: Color { get }
     /// Very light gray
     var gray100: Color { get }
+    
+    // MARK: Extended Colors (App-specific)
+    /// Pro/Premium gold color (coins, premium features)
+    var proGold: Color { get }
+    /// Gold accent color (sign-in rewards, achievements)
+    var goldAccent: Color { get }
+    /// Dark gold variant
+    var goldDark: Color { get }
+    /// Orange accent for highlights
+    var orangeAccent: Color { get }
+    
+    /// Accent blue for XP, progress
+    var accentBlue: Color { get }
+    /// Growth/completion green
+    var growthGreen: Color { get }
+    
+    /// Premium purple for gradients
+    var premiumPurple: Color { get }
+    /// Link/interactive blue
+    var linkBlue: Color { get }
+    
+    /// Dark card background
+    var cardDark: Color { get }
+    /// Surface light variant
+    var surfaceLight: Color { get }
+    /// Surface dark variant
+    var surfaceDark: Color { get }
+    
+    /// Points/currency yellow
+    var pointsYellow: Color { get }
+    /// Fresh mint green for success states
+    var mintGreen: Color { get }
 }
 
 // MARK: - 2. Typography Protocol
