@@ -53,26 +53,3 @@ public struct JetSubscriptionConfig {
         self.localizedBenefits = localizedBenefits
     }
 }
-
-// MARK: - Presets
-
-extension JetSubscriptionConfig {
-    public static var empty: JetSubscriptionConfig {
-        JetSubscriptionConfig(
-            productIds: [
-                "com.timeproof.pro.weekly",
-                "com.timeproof.pro.monthly",
-                "com.timeproof.pro.yearly",
-                "com.timeproof.pro.lifetime"
-            ],
-            proProductIds: [
-                "com.timeproof.pro.weekly",
-                "com.timeproof.pro.monthly",
-                "com.timeproof.pro.yearly",
-                "com.timeproof.pro.lifetime"
-            ],
-            groupId: "21473817",
-            appIdentifier: "com.timeproof.app"
-        )
-    }
-}

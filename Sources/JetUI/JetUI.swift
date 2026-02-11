@@ -16,12 +16,33 @@
 //
 
 import Foundation
+import SwiftUI
 
 // MARK: - Version
 
 public enum JetUI {
     /// 库版本号
     public static let version = "2.0.0"
+    
+    // MARK: - Theme System
+    
+    /// Current theme configuration
+    /// Defaults to `DefaultTheme` if no custom theme is configured
+    public private(set) static var theme: JetThemeConfig = DefaultTheme()
+    
+    /// Configure a custom theme for the library
+    /// - Parameter config: Custom theme configuration conforming to `JetThemeConfig`
+    ///
+    /// Example usage:
+    /// ```swift
+    /// // In your App's init()
+    /// JetUI.configureTheme(MyAppTheme())
+    /// ```
+    public static func configureTheme(_ config: JetThemeConfig) {
+        theme = config
+    }
+    
+    // MARK: - Subscription Configuration
 
     public static var subscriptionConfig: JetSubscriptionConfig?
 
@@ -82,13 +103,6 @@ public enum JetUI {
         subscriptionConfig = config
         self.paywallConfiguration = paywallConfiguration
         _ = JetSubscriptionManager()
-    }
-    
-    /// 单独配置 Paywall 视图
-    /// - Parameter configuration: Paywall 视图配置
-    @MainActor
-    public static func configurePaywall(_ configuration: JetPaywallConfiguration) {
-        paywallConfiguration = configuration
     }
 }
 

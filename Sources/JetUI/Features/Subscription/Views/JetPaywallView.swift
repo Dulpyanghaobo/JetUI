@@ -191,16 +191,10 @@ public struct JetPaywallView: View {
         self.onDismiss = onDismiss
     }
     
-    /// 使用默认 ViewModel 和全局配置初始化
-    /// 需要先调用 JetUI.configureSubscription 和 JetUI.configurePaywall
-    /// - Parameters:
-    ///   - onSuccess: 购买成功回调
-    ///   - onDismiss: 关闭回调
     public init(
         onSuccess: @escaping () -> Void = {},
         onDismiss: (() -> Void)? = nil
     ) {
-        let config = JetUI.subscriptionConfig ?? .empty
         self._internalViewModel = StateObject(wrappedValue: JetPaywallViewModel())
         self.externalViewModel = nil
         self.configuration = JetUI.paywallConfiguration ?? .default

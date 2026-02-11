@@ -2,7 +2,8 @@
 //  AppColor.swift
 //  JetUI
 //
-//  Unified color management for the application
+//  Unified color management for the application.
+//  Colors are now read from the configured theme via JetUI.theme.colors.
 //
 
 import SwiftUI
@@ -11,7 +12,8 @@ import SwiftUI
 import UIKit
 #endif
 
-// MARK: - Hex → Color
+// MARK: - Hex → Color Extension
+
 public extension Color {
     init(hex: UInt32) {
         let a, r, g, b: Double
@@ -31,7 +33,8 @@ public extension Color {
 }
 
 #if canImport(UIKit)
-// MARK: - Hex → UIColor
+// MARK: - Hex → UIColor Extension
+
 extension UIColor {
     convenience init(hex: UInt32) {
         let a, r, g, b: CGFloat
@@ -51,55 +54,94 @@ extension UIColor {
 }
 #endif
 
-// MARK: - 颜色库
-public enum AppColor {
-    // Brand
-    public static let themeColor = Color(hex: 0x2786D5)
-    public static let subscripBackColor = Color(hex: 0x071F4C)
+// MARK: - App Colors (Proxy Pattern)
 
+/// Unified color accessor that reads from the configured theme.
+/// These computed properties delegate to `JetUI.theme.colors`.
+public enum AppColor {
     
-    public static let primaryBackground = Color(hex: 0x161615)
-    public static let primary700 = Color(hex: 0x212121)
-    public static let primary300 = Color(hex: 0xFFC74D)
-    public static let primary100 = Color(hex: 0xFFE7B3)
+    // MARK: Brand Colors
     
-    // Neutral
-    public static let gray900 = Color(hex: 0x1A1A1A)
-    public static let gray901 = Color(hex: 0x252525)
-    public static let gray902 = Color(hex: 0x151515)
-    public static let gray700 = Color(hex: 0x4D4D4D)
-    public static let gray500 = Color(hex: 0x8C8C8C)
-    public static let gray300 = Color(hex: 0xD9D9D9)
-    public static let gray100 = Color(hex: 0x757575)
+    /// Primary theme/brand color
+    public static var themeColor: Color { JetUI.theme.colors.brandPrimary }
     
-    // Semantic
-    public static let success = Color(hex: 0x1FAD66)
-    public static let warning = Color(hex: 0xFFCC00)
-    public static let error   = Color(hex: 0xF24822)
+    /// Subscription background color
+    public static var subscripBackColor: Color { JetUI.theme.colors.brandSecondary }
+    
+    // MARK: Background Colors
+    
+    /// Primary background color
+    public static var primaryBackground: Color { JetUI.theme.colors.backgroundPrimary }
+    
+    /// Secondary background (cards, sections)
+    public static var primary700: Color { JetUI.theme.colors.backgroundSecondary }
+    
+    /// Primary accent light
+    public static var primary300: Color { Color(hex: 0xFFC74D) }
+    
+    /// Primary accent very light
+    public static var primary100: Color { Color(hex: 0xFFE7B3) }
+    
+    // MARK: Gray Scale
+    
+    /// Darkest gray (near black)
+    public static var gray900: Color { JetUI.theme.colors.gray900 }
+    
+    /// Very dark gray (cards)
+    public static var gray901: Color { JetUI.theme.colors.gray800 }
+    
+    /// Dark background variant
+    public static var gray902: Color { Color(hex: 0x151515) }
+    
+    /// Dark gray
+    public static var gray700: Color { JetUI.theme.colors.gray700 }
+    
+    /// Medium gray
+    public static var gray500: Color { JetUI.theme.colors.gray500 }
+    
+    /// Light gray
+    public static var gray300: Color { JetUI.theme.colors.gray300 }
+    
+    /// Very light gray
+    public static var gray100: Color { JetUI.theme.colors.gray100 }
+    
+    // MARK: Semantic Colors
+    
+    /// Success state color
+    public static var success: Color { JetUI.theme.colors.success }
+    
+    /// Warning state color
+    public static var warning: Color { JetUI.theme.colors.warning }
+    
+    /// Error state color
+    public static var error: Color { JetUI.theme.colors.error }
 }
 
 #if canImport(UIKit)
-// UIKit 使用
+// MARK: - UIKit Color Extensions
+
 public extension UIColor {
-    static let appPrimary500 = UIColor(hex: 0xFFA800)
-    static let appPrimary600 = UIColor(hex: 0xDB9300)
-    static let appPrimary700 = UIColor(hex: 0xB37700)
-    static let appPrimary300 = UIColor(hex: 0xFFC74D)
-    static let appPrimary100 = UIColor(hex: 0xFFE7B3)
+    static var appPrimary500: UIColor { UIColor(hex: 0xFFA800) }
+    static var appPrimary600: UIColor { UIColor(hex: 0xDB9300) }
+    static var appPrimary700: UIColor { UIColor(hex: 0xB37700) }
+    static var appPrimary300: UIColor { UIColor(hex: 0xFFC74D) }
+    static var appPrimary100: UIColor { UIColor(hex: 0xFFE7B3) }
 
-    static let appGray900 = UIColor(hex: 0x1A1A1A)
-    static let appGray700 = UIColor(hex: 0x4D4D4D)
-    static let appGray500 = UIColor(hex: 0x8C8C8C)
-    static let appGray300 = UIColor(hex: 0xD9D9D9)
-    static let appGray100 = UIColor(hex: 0xF5F5F5)
+    static var appGray900: UIColor { UIColor(hex: 0x1A1A1A) }
+    static var appGray700: UIColor { UIColor(hex: 0x4D4D4D) }
+    static var appGray500: UIColor { UIColor(hex: 0x8C8C8C) }
+    static var appGray300: UIColor { UIColor(hex: 0xD9D9D9) }
+    static var appGray100: UIColor { UIColor(hex: 0xF5F5F5) }
 
-    static let appSuccess = UIColor(hex: 0x1FAD66)
-    static let appWarning = UIColor(hex: 0xFFCC00)
-    static let appError   = UIColor(hex: 0xF24822)
+    static var appSuccess: UIColor { UIColor(hex: 0x1FAD66) }
+    static var appWarning: UIColor { UIColor(hex: 0xFFCC00) }
+    static var appError: UIColor { UIColor(hex: 0xF24822) }
 }
 
+// MARK: - Color ↔ Hex String Conversion
+
 public extension Color {
-    /// 转成 8 位 hex 字符串，如 "#FF0000FF"
+    /// Convert to 8-digit hex string, e.g., "#FF0000FF"
     func toHexString() -> String? {
         let uiColor = UIColor(self)
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
@@ -114,7 +156,7 @@ public extension Color {
         return String(format: "#%08X", rgba)
     }
 
-    /// 从 hex 构造颜色，支持 #RRGGBB / #RRGGBBAA
+    /// Create color from hex string, supports #RRGGBB / #RRGGBBAA
     init?(hexString: String?) {
         guard let hex = hexString?.trimmingCharacters(in: .whitespacesAndNewlines),
               hex.starts(with: "#"),
@@ -141,7 +183,7 @@ public extension Color {
 }
 
 public extension UIColor {
-    /// 转成 8 位 hex 字符串，如 "#FF0000FF"
+    /// Convert to 8-digit hex string, e.g., "#FF0000FF"
     func toHexString() -> String? {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
         guard self.getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
