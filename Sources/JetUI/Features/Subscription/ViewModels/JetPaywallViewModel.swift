@@ -99,21 +99,14 @@ public final class JetPaywallViewModel: ObservableObject {
     // MARK: - Private Properties
     
     private let storeService: JetStoreServiceProtocol
-    private let config: JetSubscriptionConfig
-    
-    /// 简化的 analytics 访问
-    private var analytics: JetAnalyticsManager { JetAnalyticsManager.shared }
-    
-    // MARK: - Initialization
-    
-    public init(
-        config: JetSubscriptionConfig,
-        storeService: JetStoreServiceProtocol? = nil
-    ) {
-        self.config = config
-        self.storeService = storeService ?? JetStoreService(config: config)
+
+    public init(storeService: JetStoreServiceProtocol? = nil) {
         
-        Task { await load() }
+        self.storeService = storeService ?? JetStoreService()
+        
+        Task { @MainActor in
+            await load()
+        }
     }
     
     // MARK: - Public Methods
@@ -169,25 +162,25 @@ public final class JetPaywallViewModel: ObservableObject {
         guard purchaseInProgress == nil else { return }
         
         purchaseInProgress = product.id
-        analytics.logPurchaseStart(productId: product.id)
+        AnalyticsManager.logPurchaseStart(productId: product.id)
         
         do {
             let (_, _) = try await storeService.purchase(product)
             
             // 购买成功（如果执行到这里说明没有抛出异常）
-            analytics.logPurchaseSuccess(productId: product.id)
+            AnalyticsManager.logPurchaseSuccess(productId: product.id)
             shouldDismissPaywall = true
             
             purchaseInProgress = nil
             
         } catch JetStoreError.cancelled {
             purchaseInProgress = nil
-            analytics.logPurchaseCancelled(productId: product.id)
+            AnalyticsManager.logPurchaseCancelled(productId: product.id)
             
         } catch {
             purchaseInProgress = nil
             errorMessage = error.localizedDescription
-            analytics.logPurchaseFailed(productId: product.id, error: error.localizedDescription)
+            AnalyticsManager.logPurchaseFailed(productId: product.id, error: error.localizedDescription)
         }
     }
     
@@ -196,18 +189,18 @@ public final class JetPaywallViewModel: ObservableObject {
         guard !restoreInProgress else { return }
         
         restoreInProgress = true
-        analytics.logEvent(JetPaywallEvent.restoreStart)
+        AnalyticsManager.logEvent(JetPaywallEvent.restoreStart)
         
         do {
             try await storeService.restorePurchases()
             
             let isPro = await storeService.isEntitledToPro()
             if isPro {
-                analytics.logRestoreSuccess()
+                AnalyticsManager.logRestoreSuccess()
                 shouldDismissPaywall = true
             } else {
                 errorMessage = "No active subscription found"
-                analytics.logEvent(JetPaywallEvent.restoreNoSubscription)
+                AnalyticsManager.logEvent(JetPaywallEvent.restoreNoSubscription)
             }
             
             restoreInProgress = false
@@ -215,7 +208,7 @@ public final class JetPaywallViewModel: ObservableObject {
         } catch {
             restoreInProgress = false
             errorMessage = error.localizedDescription
-            analytics.logRestoreFailed(error: error.localizedDescription)
+            AnalyticsManager.logRestoreFailed(error: error.localizedDescription)
         }
     }
     

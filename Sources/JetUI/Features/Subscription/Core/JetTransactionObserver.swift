@@ -131,7 +131,7 @@ public struct JetIAPBootstrap {
     public init(config: JetSubscriptionConfig, accessGroup: String? = nil) {
         self.config = config
         self.accessGroup = accessGroup
-        self.storeService = JetStoreService(config: config)
+        self.storeService = JetStoreService()
         self.transactionObserver = JetTransactionObserver(
             storeService: storeService,
             config: config,

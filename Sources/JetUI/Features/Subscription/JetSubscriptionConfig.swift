@@ -57,13 +57,22 @@ public struct JetSubscriptionConfig {
 // MARK: - Presets
 
 extension JetSubscriptionConfig {
-    /// 创建空配置（用于测试）
     public static var empty: JetSubscriptionConfig {
         JetSubscriptionConfig(
-            productIds: [],
-            proProductIds: [],
-            groupId: "",
-            appIdentifier: ""
+            productIds: [
+                "com.timeproof.pro.weekly",
+                "com.timeproof.pro.monthly",
+                "com.timeproof.pro.yearly",
+                "com.timeproof.pro.lifetime"
+            ],
+            proProductIds: [
+                "com.timeproof.pro.weekly",
+                "com.timeproof.pro.monthly",
+                "com.timeproof.pro.yearly",
+                "com.timeproof.pro.lifetime"
+            ],
+            groupId: "21473817",
+            appIdentifier: "com.timeproof.app"
         )
     }
 }

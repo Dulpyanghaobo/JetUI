@@ -22,13 +22,9 @@ import Foundation
 public enum JetUI {
     /// 库版本号
     public static let version = "2.0.0"
-    
-    /// 全局订阅配置存储
-    @MainActor
+
     public static var subscriptionConfig: JetSubscriptionConfig?
-    
-    /// 全局 Paywall 视图配置存储
-    @MainActor
+
     public static var paywallConfiguration: JetPaywallConfiguration?
     
     /// 配置日志 subsystem
@@ -85,7 +81,7 @@ public enum JetUI {
     ) {
         subscriptionConfig = config
         self.paywallConfiguration = paywallConfiguration
-        _ = JetSubscriptionManager(config: config)
+        _ = JetSubscriptionManager()
     }
     
     /// 单独配置 Paywall 视图

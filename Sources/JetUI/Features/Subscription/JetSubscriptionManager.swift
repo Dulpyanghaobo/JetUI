@@ -12,9 +12,7 @@ import Combine
 /// 订阅管理器 - 管理订阅状态和权益
 @MainActor
 public final class JetSubscriptionManager: ObservableObject {
-    
-    // MARK: - Published Properties
-    
+        
     /// 是否为 Pro 用户
     @Published public private(set) var isPro: Bool = false
     
@@ -30,16 +28,12 @@ public final class JetSubscriptionManager: ObservableObject {
     // MARK: - Private Properties
     
     private let storeService: JetStoreServiceProtocol
-    private let config: JetSubscriptionConfig
     private var transactionTask: Task<Void, Never>?
     
     // MARK: - Initialization
     
-    public init(config: JetSubscriptionConfig, storeService: JetStoreServiceProtocol? = nil) {
-        self.config = config
-        self.storeService = storeService ?? JetStoreService(config: config)
-        
-        // 启动交易监听
+    public init(storeService: JetStoreServiceProtocol? = nil) {
+        self.storeService = storeService ?? JetStoreService()
         startTransactionListener()
     }
     

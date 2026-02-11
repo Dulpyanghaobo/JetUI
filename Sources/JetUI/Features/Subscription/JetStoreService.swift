@@ -54,16 +54,13 @@ public enum JetStoreError: Error, LocalizedError {
 /// StoreKit 2 商店服务实现
 public final class JetStoreService: JetStoreServiceProtocol {
     
-    private let config: JetSubscriptionConfig
     private let signer: JetPromotionalOfferSigner?
     private let accountService: AccountServiceProtocol
     
     public init(
-        config: JetSubscriptionConfig, 
         signer: JetPromotionalOfferSigner? = nil,
         accountService: AccountServiceProtocol? = nil
     ) {
-        self.config = config
         self.signer = signer
         self.accountService = accountService ?? DefaultAccountService.shared
     }
@@ -71,6 +68,8 @@ public final class JetStoreService: JetStoreServiceProtocol {
     // MARK: - JetStoreServiceProtocol
     
     public func fetchProducts() async throws -> [Product] {
+        guard let config = JetUI.subscriptionConfig else { return [] }
+        
         guard !config.productIds.isEmpty else {
             throw JetStoreError.noProducts
         }
@@ -144,6 +143,9 @@ public final class JetStoreService: JetStoreServiceProtocol {
     
     public func isEntitledToPro() async -> Bool {
         let entitlements = try? await currentEntitlements()
+        
+        guard let config = JetUI.subscriptionConfig else { return false }
+
         return entitlements?.contains(where: { config.proProductIds.contains($0.productID) }) ?? false
     }
 }

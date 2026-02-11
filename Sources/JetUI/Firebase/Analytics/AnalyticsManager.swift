@@ -8,9 +8,25 @@
 import Foundation
 import FirebaseAnalytics
 
-// MARK: - Analytics Context
+// MARK: - Paywall Event Names
 
-/// 分析上下文 - 包含通用参数
+/// Paywall 事件名称常量
+public enum JetPaywallEvent {
+    public static let view = "paywall_view"
+    public static let action = "paywall_action"
+    public static let optionSelect = "paywall_option_select"
+    public static let purchaseStart = "paywall_purchase_start"
+    public static let purchaseSuccess = "paywall_purchase_success"
+    public static let purchaseCancelled = "paywall_purchase_cancelled"
+    public static let purchaseFailed = "paywall_purchase_failed"
+    public static let restoreStart = "paywall_restore_start"
+    public static let restoreSuccess = "paywall_restore_success"
+    public static let restoreFailed = "paywall_restore_failed"
+    public static let restoreNoSubscription = "paywall_restore_no_subscription"
+}
+
+public typealias JetAnalyticsManager = AnalyticsManager
+
 public struct AnalyticsContext {
     public var sessionId: String = UUID().uuidString
     public var pro: Bool = false
@@ -37,14 +53,9 @@ public struct AnalyticsContext {
     }
 }
 
-// MARK: - Analytics Manager
-
-/// 分析管理器 - 直接使用 Firebase Analytics
 public enum AnalyticsManager {
     
     // MARK: - Configuration
-    
-    /// 上下文
     private static var ctx = AnalyticsContext()
     
     /// 是否启用分析（默认启用）
@@ -99,9 +110,6 @@ public enum AnalyticsManager {
         isEnabled = enabled
     }
     
-    // MARK: - Helper Methods
-    
-    /// 记录按钮点击
     public static func logButtonClick(_ buttonName: String) {
         logEvent("button_click", parameters: ["name": buttonName])
     }
@@ -110,8 +118,6 @@ public enum AnalyticsManager {
     public static func logSubscription(plan: String) {
         logEvent("subscription", parameters: ["plan": plan])
     }
-    
-    // MARK: - Photo & Video Events
     
     public static func logPhotoCapture(template: String?, hasWatermark: Bool, aspectRatio: String) {
         logEvent("photo_capture", parameters: [
@@ -133,7 +139,6 @@ public enum AnalyticsManager {
     }
     
     // MARK: - Template Events
-    
     public static func logTemplateSelect(templateId: String, templateName: String, category: String, source: String) {
         logEvent("template_select", parameters: [
             "template_id": templateId,
@@ -161,33 +166,74 @@ public enum AnalyticsManager {
     // MARK: - Subscription Events
     
     public static func logPaywallShow(source: String) {
-        logEvent("paywall_show", parameters: ["source": source])
+        logEvent(JetPaywallEvent.view, parameters: ["source": source])
+    }
+    
+    /// 记录 Paywall 显示（带变体）
+    public static func logPaywallView(variant: String) {
+        logEvent(JetPaywallEvent.view, parameters: ["variant": variant])
     }
     
     public static func logPurchaseStart(productId: String, planType: String) {
-        logEvent("purchase_start", parameters: [
+        logEvent(JetPaywallEvent.purchaseStart, parameters: [
             "product_id": productId,
             "plan_type": planType
         ])
     }
     
+    /// 记录购买开始（简化版，仅 productId）
+    public static func logPurchaseStart(productId: String) {
+        logEvent(JetPaywallEvent.purchaseStart, parameters: [
+            "product_id": productId
+        ])
+    }
+    
     public static func logPurchaseSuccess(productId: String, planType: String, price: String) {
-        logEvent("purchase_success", parameters: [
+        logEvent(JetPaywallEvent.purchaseSuccess, parameters: [
             "product_id": productId,
             "plan_type": planType,
             "price": price
         ])
     }
     
+    /// 记录购买成功（简化版，仅 productId）
+    public static func logPurchaseSuccess(productId: String) {
+        logEvent(JetPaywallEvent.purchaseSuccess, parameters: [
+            "product_id": productId
+        ])
+    }
+    
+    /// 记录购买取消
+    public static func logPurchaseCancelled(productId: String) {
+        logEvent(JetPaywallEvent.purchaseCancelled, parameters: [
+            "product_id": productId
+        ])
+    }
+    
     public static func logPurchaseFailure(productId: String, error: String) {
-        logEvent("purchase_failure", parameters: [
+        logEvent(JetPaywallEvent.purchaseFailed, parameters: [
             "product_id": productId,
             "error": error
         ])
     }
     
+    /// 记录购买失败（别名）
+    public static func logPurchaseFailed(productId: String, error: String) {
+        logPurchaseFailure(productId: productId, error: error)
+    }
+    
     public static func logRestorePurchase(success: Bool) {
         logEvent("restore_purchase", parameters: ["success": success])
+    }
+    
+    /// 记录恢复购买成功
+    public static func logRestoreSuccess() {
+        logEvent(JetPaywallEvent.restoreSuccess)
+    }
+    
+    /// 记录恢复购买失败
+    public static func logRestoreFailed(error: String) {
+        logEvent(JetPaywallEvent.restoreFailed, parameters: ["error": error])
     }
     
     // MARK: - User Journey Events

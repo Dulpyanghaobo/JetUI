@@ -181,33 +181,69 @@ JetTrialPaywallView(
 
 ## 📊 Analytics (埋点)
 
-如果你需要对接 Firebase、Mixpanel 或自家后端，只需实现 `JetPaywallAnalytics` 协议：
+订阅模块直接使用 `AnalyticsManager` 进行埋点，无需额外配置。
+
+### 自动记录的事件
+
+订阅模块会自动记录以下事件：
+
+| 事件名称 | 触发时机 | 参数 |
+|---------|---------|------|
+| `paywall_view` | Paywall 页面展示 | `source` 或 `variant` |
+| `paywall_purchase_start` | 开始购买 | `product_id` |
+| `paywall_purchase_success` | 购买成功 | `product_id` |
+| `paywall_purchase_cancelled` | 用户取消购买 | `product_id` |
+| `paywall_purchase_failed` | 购买失败 | `product_id`, `error` |
+| `paywall_restore_start` | 开始恢复购买 | - |
+| `paywall_restore_success` | 恢复购买成功 | - |
+| `paywall_restore_failed` | 恢复购买失败 | `error` |
+| `paywall_restore_no_subscription` | 未找到订阅 | - |
+| `paywall_action` | 用户交互动作 | `action`, `plan_id`, `title` |
+| `paywall_option_select` | 选择订阅选项 | `plan_id`, `title` |
+
+### 事件名称常量
+
+可以使用 `JetPaywallEvent` 枚举访问事件名称常量：
 
 ```swift
-class MyAnalyticsHandler: JetPaywallAnalytics {
-    func logEvent(_ name: String, parameters: [String : Any]) {
-        // 发送给你的统计 SDK
-        Analytics.logEvent(name, parameters: parameters)
-        print("📊 [Paywall Event]: \(name) - \(parameters)")
-    }
-}
-
-// 注入到 ViewModel 或 Paywall View 中
-let viewModel = JetPaywallViewModel(
-    config: config, 
-    analytics: MyAnalyticsHandler()
-)
-
+JetPaywallEvent.view              // "paywall_view"
+JetPaywallEvent.action            // "paywall_action"
+JetPaywallEvent.optionSelect      // "paywall_option_select"
+JetPaywallEvent.purchaseStart     // "paywall_purchase_start"
+JetPaywallEvent.purchaseSuccess   // "paywall_purchase_success"
+JetPaywallEvent.purchaseCancelled // "paywall_purchase_cancelled"
+JetPaywallEvent.purchaseFailed    // "paywall_purchase_failed"
+JetPaywallEvent.restoreStart      // "paywall_restore_start"
+JetPaywallEvent.restoreSuccess    // "paywall_restore_success"
+JetPaywallEvent.restoreFailed     // "paywall_restore_failed"
+JetPaywallEvent.restoreNoSubscription // "paywall_restore_no_subscription"
 ```
 
-**支持的事件：**
+### 手动记录事件
 
-* `paywall_view`
-* `paywall_purchase_start`
-* `paywall_purchase_success`
-* `paywall_purchase_failed`
-* `paywall_restore_success`
-* ...
+如需手动记录 Paywall 相关事件：
+
+```swift
+// 记录 Paywall 显示
+AnalyticsManager.logPaywallShow(source: "settings")
+AnalyticsManager.logPaywallView(variant: "trial")
+
+// 记录购买事件
+AnalyticsManager.logPurchaseStart(productId: "com.app.yearly")
+AnalyticsManager.logPurchaseSuccess(productId: "com.app.yearly")
+AnalyticsManager.logPurchaseCancelled(productId: "com.app.yearly")
+AnalyticsManager.logPurchaseFailed(productId: "com.app.yearly", error: "Network error")
+
+// 记录恢复购买
+AnalyticsManager.logRestoreSuccess()
+AnalyticsManager.logRestoreFailed(error: "No subscription found")
+
+// 通用事件记录
+AnalyticsManager.logEvent(JetPaywallEvent.action, parameters: [
+    "action": "dismiss",
+    "source": "header_close"
+])
+```
 
 ---
 

@@ -157,7 +157,7 @@ public struct JetPaywallView: View {
         onDismiss: (() -> Void)? = nil
     ) {
         let config = JetUI.subscriptionConfig ?? .empty
-        self._internalViewModel = StateObject(wrappedValue: JetPaywallViewModel(config: config))
+        self._internalViewModel = StateObject(wrappedValue: JetPaywallViewModel())
         self.externalViewModel = nil
         self.configuration = JetUI.paywallConfiguration ?? .default
         self.onSuccess = onSuccess

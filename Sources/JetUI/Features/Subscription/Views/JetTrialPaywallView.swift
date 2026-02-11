@@ -26,9 +26,6 @@ public struct JetTrialPaywallView: View {
     private let config: JetTrialPaywallConfig
     private let onSuccess: () -> Void
     
-    /// 简化的 analytics 访问
-    private var analytics: JetAnalyticsManager { JetAnalyticsManager.shared }
-    
     // MARK: - Computed Properties
     
     private var isYearlySelected: Bool {
@@ -46,9 +43,7 @@ public struct JetTrialPaywallView: View {
     ) {
         self.config = config
         self.onSuccess = onSuccess
-        self._vm = StateObject(wrappedValue: JetPaywallViewModel(
-            config: subscriptionConfig
-        ))
+        self._vm = StateObject(wrappedValue: JetPaywallViewModel())
     }
     
     // MARK: - Body
@@ -120,7 +115,7 @@ public struct JetTrialPaywallView: View {
         .onAppear {
             if !didLogView {
                 didLogView = true
-                analytics.logPaywallView(variant: "trial")
+                AnalyticsManager.logPaywallView(variant: "trial")
             }
         }
     }
@@ -133,7 +128,7 @@ private extension JetTrialPaywallView {
     var header: some View {
         HStack {
             Button(action: {
-                analytics.logEvent(JetPaywallEvent.action, parameters: [
+                AnalyticsManager.logEvent(JetPaywallEvent.action, parameters: [
                     "action": "dismiss",
                     "source": "header_close"
                 ])
@@ -148,7 +143,7 @@ private extension JetTrialPaywallView {
             Spacer()
             
             Button(config.restoreButtonTitle) {
-                analytics.logEvent(JetPaywallEvent.action, parameters: ["action": "restore_tap"])
+                AnalyticsManager.logEvent(JetPaywallEvent.action, parameters: ["action": "restore_tap"])
                 restoreTapPending = true
                 Task { await vm.restore() }
             }
@@ -205,7 +200,7 @@ private extension JetTrialPaywallView {
                     allowHighlight: plan.isYearly,
                     accentColor: config.accentColor
                 ) {
-                    analytics.logEvent(JetPaywallEvent.optionSelect, parameters: [
+                    AnalyticsManager.logEvent(JetPaywallEvent.optionSelect, parameters: [
                         "plan_id": plan.id,
                         "title": plan.title
                     ])
@@ -235,7 +230,7 @@ private extension JetTrialPaywallView {
         let sel = vm.plans.first(where: { $0.id == vm.selectedProductID })
         
         return Button {
-            analytics.logEvent(JetPaywallEvent.action, parameters: [
+            AnalyticsManager.logEvent(JetPaywallEvent.action, parameters: [
                 "action": "continue_tap",
                 "plan_id": sel?.id ?? "none",
                 "title": sel?.title ?? ""
@@ -344,7 +339,7 @@ private extension JetTrialPaywallView {
     func logSuccessEvent() {
         let sel = vm.plans.first(where: { $0.id == vm.selectedProductID })
         let action = restoreTapPending ? "restore_success" : "purchase_success"
-        analytics.logEvent(JetPaywallEvent.action, parameters: [
+        AnalyticsManager.logEvent(JetPaywallEvent.action, parameters: [
             "action": action,
             "plan_id": sel?.id ?? "none",
             "title": sel?.title ?? ""
