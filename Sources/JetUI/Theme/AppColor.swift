@@ -2,8 +2,16 @@
 //  AppColor.swift
 //  JetUI
 //
-//  Unified color management for the application.
-//  Colors are now read from the configured theme via JetUI.theme.colors.
+//  Unified semantic color management for the application.
+//  Colors are read from the configured theme via JetUI.theme.colors.
+//
+//  ## Naming Convention (Semantic)
+//  - Labels/Text: labelPrimary, labelSecondary, labelTertiary, labelDisabled
+//  - Backgrounds: backgroundPrimary, backgroundSecondary, backgroundTertiary
+//  - Brand: brandPrimary, brandSecondary
+//  - Status: statusSuccess, statusWarning, statusError
+//  - Surfaces: surfacePrimary, surfaceSecondary, surfaceElevated
+//  - Accents: accentGold, accentBlue, accentGreen, accentPurple
 //
 
 import SwiftUI
@@ -54,91 +62,136 @@ extension UIColor {
 }
 #endif
 
-// MARK: - App Colors (Proxy Pattern)
+// MARK: - App Colors (Semantic Naming)
 
-/// Unified color accessor that reads from the configured theme.
-/// These computed properties delegate to `JetUI.theme.colors`.
+/// Unified color accessor using semantic naming convention.
+/// All computed properties delegate to `JetUI.theme.colors`.
+///
+/// ## Semantic Categories
+/// - **Label/Text**: For text content (primary, secondary, tertiary, disabled)
+/// - **Background**: For view backgrounds (primary, secondary, tertiary)
+/// - **Surface**: For card/elevated surfaces
+/// - **Brand**: For brand identity colors
+/// - **Status**: For state indicators (success, warning, error)
+/// - **Accent**: For highlight and interactive elements
 public enum AppColor {
     
-    // MARK: Brand Colors
+    // MARK: - Label/Text Colors (Semantic)
     
-    /// Primary theme/brand color
-    public static var themeColor: Color { JetUI.theme.colors.brandPrimary }
+    /// Primary text color - headings, important text, body text
+    /// Use for: Titles, headings, main content text
+    public static var labelPrimary: Color { JetUI.theme.colors.textPrimary }
     
-    /// Subscription background color
-    public static var subscripBackColor: Color { JetUI.theme.colors.brandSecondary }
+    /// Secondary text color - descriptions, subtitles
+    /// Use for: Subtitles, secondary information, descriptions
+    public static var labelSecondary: Color { JetUI.theme.colors.textSecondary }
     
-    // MARK: Background Colors
+    /// Tertiary text color - placeholders, hints, captions
+    /// Use for: Placeholder text, hints, less important info
+    public static var labelTertiary: Color { JetUI.theme.colors.textTertiary }
     
-    /// Primary background color
-    public static var primaryBackground: Color { JetUI.theme.colors.backgroundPrimary }
+    /// Disabled text color - inactive states
+    /// Use for: Disabled buttons, inactive text
+    public static var labelDisabled: Color { JetUI.theme.colors.textDisabled }
     
-    /// Secondary background (cards, sections)
-    public static var primary700: Color { JetUI.theme.colors.backgroundSecondary }
+    // MARK: - Background Colors (Semantic)
     
-    /// Primary accent light
-    public static var primary300: Color { Color(hex: 0xFFC74D) }
+    /// Primary background - main screen/view background
+    /// Use for: Main view background, root containers
+    public static var backgroundPrimary: Color { JetUI.theme.colors.backgroundPrimary }
     
-    /// Primary accent very light
-    public static var primary100: Color { Color(hex: 0xFFE7B3) }
+    /// Secondary background - cards, sections, grouped content
+    /// Use for: Card backgrounds, section backgrounds
+    public static var backgroundSecondary: Color { JetUI.theme.colors.backgroundSecondary }
     
-    // MARK: Gray Scale
+    /// Tertiary background - nested cards, modals, popups
+    /// Use for: Modal backgrounds, nested containers
+    public static var backgroundTertiary: Color { JetUI.theme.colors.backgroundTertiary }
     
-    /// Darkest gray (near black)
-    public static var gray900: Color { JetUI.theme.colors.gray900 }
+    // MARK: - Surface Colors (Semantic)
     
-    /// Very dark gray (cards)
-    public static var gray901: Color { JetUI.theme.colors.gray800 }
+    /// Primary surface - default card/container surface
+    /// Use for: Card surfaces, list items
+    public static var surfacePrimary: Color { JetUI.theme.colors.cardDark }
     
-    /// Dark background variant
-    public static var gray902: Color { Color(hex: 0x151515) }
+    /// Secondary surface - nested or lighter surface
+    /// Use for: Nested cards, secondary containers
+    public static var surfaceSecondary: Color { JetUI.theme.colors.surfaceLight }
     
-    /// Dark gray
-    public static var gray700: Color { JetUI.theme.colors.gray700 }
+    /// Elevated surface - raised elements, floating cards
+    /// Use for: Floating action buttons, elevated cards
+    public static var surfaceElevated: Color { JetUI.theme.colors.surfaceDark }
     
-    /// Medium gray
-    public static var gray500: Color { JetUI.theme.colors.gray500 }
+    // MARK: - Brand Colors (Semantic)
     
-    /// Light gray
-    public static var gray300: Color { JetUI.theme.colors.gray300 }
+    /// Primary brand color - main theme/accent color
+    /// Use for: Primary buttons, links, interactive elements
+    public static var brandPrimary: Color { JetUI.theme.colors.brandPrimary }
     
-    /// Very light gray
-    public static var gray100: Color { JetUI.theme.colors.gray100 }
+    /// Secondary brand color - complementary brand element
+    /// Use for: Secondary actions, subscription UI
+    public static var brandSecondary: Color { JetUI.theme.colors.brandSecondary }
     
-    // MARK: Semantic Colors
+    // MARK: - Status Colors (Semantic)
     
     /// Success state color
-    public static var success: Color { JetUI.theme.colors.success }
+    /// Use for: Success messages, completed states, positive feedback
+    public static var statusSuccess: Color { JetUI.theme.colors.success }
     
     /// Warning state color
-    public static var warning: Color { JetUI.theme.colors.warning }
+    /// Use for: Warning messages, caution states
+    public static var statusWarning: Color { JetUI.theme.colors.warning }
     
     /// Error state color
-    public static var error: Color { JetUI.theme.colors.error }
+    /// Use for: Error messages, destructive actions, alerts
+    public static var statusError: Color { JetUI.theme.colors.error }
+    
+    // MARK: - Accent Colors (Semantic)
+    
+    /// Gold accent - premium features, coins, rewards
+    /// Use for: Premium badges, coin indicators, rewards
+    public static var accentGold: Color { JetUI.theme.colors.proGold }
+    
+    /// Gold highlight - sign-in rewards, achievements
+    /// Use for: Achievement badges, special rewards
+    public static var accentGoldHighlight: Color { JetUI.theme.colors.goldAccent }
+    
+    /// Dark gold - secondary gold variant
+    /// Use for: Gold shadows, secondary premium elements
+    public static var accentGoldDark: Color { JetUI.theme.colors.goldDark }
+    
+    /// Orange accent - highlights, attention
+    /// Use for: Attention-grabbing elements, highlights
+    public static var accentOrange: Color { JetUI.theme.colors.orangeAccent }
+    
+    /// Blue accent - XP, progress, information
+    /// Use for: Progress indicators, XP displays, info badges
+    public static var accentBlue: Color { JetUI.theme.colors.accentBlue }
+    
+    /// Green accent - growth, completion, success
+    /// Use for: Growth indicators, completion states
+    public static var accentGreen: Color { JetUI.theme.colors.growthGreen }
+    
+    /// Purple accent - premium, special features
+    /// Use for: Premium gradients, special features
+    public static var accentPurple: Color { JetUI.theme.colors.premiumPurple }
+    
+    /// Mint green - fresh success states
+    /// Use for: Fresh success indicators
+    public static var accentMint: Color { JetUI.theme.colors.mintGreen }
+    
+    // MARK: - Interactive Colors (Semantic)
+    
+    /// Link color - tappable text links
+    /// Use for: Hyperlinks, clickable text
+    public static var linkColor: Color { JetUI.theme.colors.linkBlue }
+    
+    /// Points/currency indicator color
+    /// Use for: Points display, currency amounts
+    public static var pointsColor: Color { JetUI.theme.colors.pointsYellow }
 }
 
-#if canImport(UIKit)
-// MARK: - UIKit Color Extensions
-
-public extension UIColor {
-    static var appPrimary500: UIColor { UIColor(hex: 0xFFA800) }
-    static var appPrimary600: UIColor { UIColor(hex: 0xDB9300) }
-    static var appPrimary700: UIColor { UIColor(hex: 0xB37700) }
-    static var appPrimary300: UIColor { UIColor(hex: 0xFFC74D) }
-    static var appPrimary100: UIColor { UIColor(hex: 0xFFE7B3) }
-
-    static var appGray900: UIColor { UIColor(hex: 0x1A1A1A) }
-    static var appGray700: UIColor { UIColor(hex: 0x4D4D4D) }
-    static var appGray500: UIColor { UIColor(hex: 0x8C8C8C) }
-    static var appGray300: UIColor { UIColor(hex: 0xD9D9D9) }
-    static var appGray100: UIColor { UIColor(hex: 0xF5F5F5) }
-
-    static var appSuccess: UIColor { UIColor(hex: 0x1FAD66) }
-    static var appWarning: UIColor { UIColor(hex: 0xFFCC00) }
-    static var appError: UIColor { UIColor(hex: 0xF24822) }
-}
-
-// MARK: - Color ↔ Hex String Conversion
+// MARK: - Color Utilities
 
 public extension Color {
     /// Convert to 8-digit hex string, e.g., "#FF0000FF"
@@ -182,19 +235,44 @@ public extension Color {
     }
 }
 
-public extension UIColor {
-    /// Convert to 8-digit hex string, e.g., "#FF0000FF"
-    func toHexString() -> String? {
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        guard self.getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
-
-        let rgba = (
-            Int(r * 255) << 24 |
-            Int(g * 255) << 16 |
-            Int(b * 255) << 8  |
-            Int(a * 255)
-        )
-        return String(format: "#%08X", rgba)
-    }
-}
-#endif
+// MARK: - Migration Guide
+/*
+ ## Migration from Old Names to Semantic Names
+ 
+ ### Text/Label Colors
+ - gray900 → labelPrimary (darkest text)
+ - gray700 → labelSecondary (secondary text)
+ - gray500 → labelTertiary (tertiary/hint text)
+ - gray300 → labelDisabled (disabled text)
+ 
+ ### Background Colors
+ - primaryBackground → backgroundPrimary
+ - primary700 → backgroundSecondary
+ - gray901 → backgroundTertiary
+ 
+ ### Brand Colors
+ - themeColor → brandPrimary
+ - subscripBackColor → brandSecondary
+ 
+ ### Status Colors
+ - success → statusSuccess
+ - warning → statusWarning
+ - error → statusError
+ 
+ ### Surface Colors
+ - gray902 → surfaceElevated
+ - (new) surfacePrimary - card backgrounds
+ - (new) surfaceSecondary - nested surfaces
+ 
+ ### Accent Colors (New)
+ - accentGold - premium/coins
+ - accentBlue - XP/progress
+ - accentGreen - growth/success
+ - accentPurple - premium features
+ - accentOrange - highlights
+ - accentMint - fresh success
+ 
+ ### Interactive Colors (New)
+ - linkColor - hyperlinks
+ - pointsColor - currency display
+ */
