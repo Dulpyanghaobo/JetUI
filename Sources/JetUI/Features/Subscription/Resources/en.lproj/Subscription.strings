@@ -1,0 +1,98 @@
+/* 
+  Subscription.strings (English)
+  JetUI Subscription Module
+  
+  This file contains all localized strings for the subscription/paywall feature.
+*/
+
+// MARK: - Paywall Titles
+"subscription.title.unlock_pro" = "Unlock Pro";
+"subscription.title.start_trial" = "Start Your Free Trial";
+"subscription.title.how_trial_works" = "How Free Trial Works";
+"subscription.title.unlimited_access" = "Unlock Unlimited Access";
+
+// MARK: - Subscription Period Labels
+"subscription.period.yearly" = "Yearly";
+"subscription.period.monthly" = "Monthly";
+"subscription.period.weekly" = "Weekly";
+"subscription.period.daily" = "Daily";
+"subscription.period.lifetime" = "Lifetime";
+"subscription.period.months_format" = "%d Months";
+"subscription.period.weeks_format" = "%d Weeks";
+"subscription.period.days_format" = "%d Days";
+"subscription.period.years_format" = "%d Years";
+
+// MARK: - Trial Related
+"subscription.trial.free_trial" = "Free Trial";
+"subscription.trial.day_free_trial" = "%d Day Free Trial";
+"subscription.trial.week_free_trial" = "%d Week Free Trial";
+"subscription.trial.month_free_trial" = "%d Month Free Trial";
+"subscription.trial.days_free" = "%d days free";
+"subscription.trial.free_then_price" = "%@ free, then %@";
+"subscription.trial.free_trial_period" = "%@ free trial";
+"subscription.trial.today_full_access" = "Today - Full Access";
+"subscription.trial.day5_reminder" = "Day 5 - Trial Reminder";
+"subscription.trial.day7_ends" = "Day 7 - Trial Ends";
+"subscription.trial.starts_features" = "Start capture with Pro features";
+"subscription.trial.remind_before_ends" = "We'll remind you before trial ends";
+"subscription.trial.subscription_starts" = "Subscription starts";
+
+// MARK: - Buttons
+"subscription.button.continue" = "Continue";
+"subscription.button.restore" = "Restore";
+"subscription.button.restore_purchases" = "Restore Purchases";
+"subscription.button.processing" = "Processing...";
+"subscription.button.retry" = "Retry";
+"subscription.button.loading" = "Loading...";
+
+// MARK: - Price Display
+"subscription.price.per_year" = "%@/year";
+"subscription.price.per_month" = "%@/month";
+"subscription.price.per_week" = "%@/week";
+"subscription.price.per_day" = "%@/day";
+"subscription.price.save_percent" = "Save %d%%";
+"subscription.price.best_value" = "Best Value";
+"subscription.price.most_popular" = "Most Popular";
+
+// MARK: - Legal
+"subscription.legal.privacy_policy" = "Privacy Policy";
+"subscription.legal.terms_of_service" = "Terms of Service";
+"subscription.legal.terms_conditions" = "Terms & Conditions";
+"subscription.legal.auto_renewal_tip" = "Auto-renewable. Cancel anytime.";
+"subscription.legal.lifetime_tip" = "One-time purchase, valid for life.";
+
+// MARK: - Error Messages
+"subscription.error.load_failed" = "Failed to load products";
+"subscription.error.purchase_failed" = "Purchase failed";
+"subscription.error.purchase_cancelled" = "Purchase was cancelled";
+"subscription.error.purchase_pending" = "Purchase is pending";
+"subscription.error.unknown" = "An unknown error occurred";
+"subscription.error.no_products" = "No products available";
+"subscription.error.no_subscription_found" = "No active subscription found";
+"subscription.error.restore_failed" = "Failed to restore purchases";
+
+// MARK: - Benefits (Common)
+"subscription.benefit.unlimited_access" = "Unlimited Access";
+"subscription.benefit.no_ads" = "No Ads";
+"subscription.benefit.premium_features" = "Premium Features";
+"subscription.benefit.priority_support" = "Priority Support";
+"subscription.benefit.cloud_sync" = "Cloud Sync";
+"subscription.benefit.unlimited_templates" = "Unlimited Templates";
+"subscription.benefit.unlimited_timestamps" = "Unlimited Timestamps";
+"subscription.benefit.pro_filters" = "Professional Filters";
+"subscription.benefit.4k_export" = "4K Export";
+"subscription.benefit.watermark_free" = "Watermark Free";
+"subscription.benefit.all_premium" = "All Premium Features";
+
+// MARK: - Status Messages
+"subscription.status.active" = "Active";
+"subscription.status.expired" = "Expired";
+"subscription.status.trial_active" = "Trial Active";
+"subscription.status.expires_on" = "Expires on %@";
+"subscription.status.renews_on" = "Renews on %@";
+
+// MARK: - Accessibility
+"subscription.accessibility.close_button" = "Close paywall";
+"subscription.accessibility.restore_button" = "Restore previous purchases";
+"subscription.accessibility.plan_selected" = "%@ plan selected";
+"subscription.accessibility.price_option" = "%@, %@";

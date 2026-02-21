@@ -62,21 +62,21 @@ public struct JetPaywallConfiguration {
     
     public init(
         accentColor: Color = .orange,
-        brandTitle: String = "PRO",
+        brandTitle: String = SubL.Title.unlockPro,
         highlightKeyword: String? = nil,
         benefits: [String] = [],
         backgroundImageName: String? = nil,
-        restoreText: String = "Restore",
-        continueText: String = "Continue",
-        processingText: String = "Processing...",
-        retryText: String = "Retry",
-        loadFailedText: String = "Failed to load products",
-        autoRenewHint: String = "Auto-renewable. Cancel anytime.",
+        restoreText: String = SubL.Button.restore,
+        continueText: String = SubL.Button.continue,
+        processingText: String = SubL.Button.processing,
+        retryText: String = SubL.Button.retry,
+        loadFailedText: String = SubL.Error.loadFailed,
+        autoRenewHint: String = SubL.Legal.autoRenewalTip,
         privacyPolicyURL: URL? = nil,
         termsURL: URL? = nil,
-        privacyPolicyText: String = "Privacy Policy",
-        termsText: String = "Terms of Service",
-        savePercentFormat: @escaping (Int) -> String = { "Save \($0)%" }
+        privacyPolicyText: String = SubL.Legal.privacyPolicy,
+        termsText: String = SubL.Legal.termsOfService,
+        savePercentFormat: @escaping (Int) -> String = { SubL.Price.savePercent($0) }
     ) {
         self.accentColor = accentColor
         self.brandTitle = brandTitle
@@ -116,12 +116,12 @@ public struct JetPaywallConfiguration {
         self.processingText = content.processingText
         self.retryText = content.retryText
         self.loadFailedText = content.loadFailedText
-        self.autoRenewHint = "Auto-renewable. Cancel anytime."
+        self.autoRenewHint = SubL.Legal.autoRenewalTip
         self.privacyPolicyURL = content.privacyPolicyURL
         self.termsURL = content.termsURL
         self.privacyPolicyText = content.privacyText
         self.termsText = content.termsText
-        self.savePercentFormat = { "Save \($0)%" }
+        self.savePercentFormat = { SubL.Price.savePercent($0) }
     }
 }
 

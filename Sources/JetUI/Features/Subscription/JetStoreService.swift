@@ -40,11 +40,11 @@ public enum JetStoreError: Error, LocalizedError {
     
     public var errorDescription: String? {
         switch self {
-        case .cancelled: return "Purchase was cancelled"
-        case .pending: return "Purchase is pending"
-        case .unknown: return "An unknown error occurred"
-        case .noProducts: return "No products available"
-        case .purchaseFailed(let reason): return "Purchase failed: \(reason)"
+        case .cancelled: return SubL.Error.purchaseCancelled
+        case .pending: return SubL.Error.purchasePending
+        case .unknown: return SubL.Error.unknown
+        case .noProducts: return SubL.Error.noProducts
+        case .purchaseFailed(let reason): return "\(SubL.Error.purchaseFailed): \(reason)"
         }
     }
 }

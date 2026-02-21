@@ -1,0 +1,98 @@
+/* 
+  Subscription.strings (Simplified Chinese)
+  JetUI Subscription Module
+  
+  订阅/付费墙功能的所有本地化字符串
+*/
+
+// MARK: - Paywall Titles
+"subscription.title.unlock_pro" = "解锁专业版";
+"subscription.title.start_trial" = "开始免费试用";
+"subscription.title.how_trial_works" = "免费试用如何运作";
+"subscription.title.unlimited_access" = "解锁无限访问";
+
+// MARK: - Subscription Period Labels
+"subscription.period.yearly" = "年度";
+"subscription.period.monthly" = "月度";
+"subscription.period.weekly" = "每周";
+"subscription.period.daily" = "每日";
+"subscription.period.lifetime" = "终身";
+"subscription.period.months_format" = "%d 个月";
+"subscription.period.weeks_format" = "%d 周";
+"subscription.period.days_format" = "%d 天";
+"subscription.period.years_format" = "%d 年";
+
+// MARK: - Trial Related
+"subscription.trial.free_trial" = "免费试用";
+"subscription.trial.day_free_trial" = "%d 天免费试用";
+"subscription.trial.week_free_trial" = "%d 周免费试用";
+"subscription.trial.month_free_trial" = "%d 个月免费试用";
+"subscription.trial.days_free" = "%d 天免费";
+"subscription.trial.free_then_price" = "%@ 免费，之后 %@";
+"subscription.trial.free_trial_period" = "%@ 免费试用";
+"subscription.trial.today_full_access" = "今天 - 完整访问";
+"subscription.trial.day5_reminder" = "第 5 天 - 试用提醒";
+"subscription.trial.day7_ends" = "第 7 天 - 试用结束";
+"subscription.trial.starts_features" = "开始使用专业版功能拍摄";
+"subscription.trial.remind_before_ends" = "我们会在试用结束前提醒您";
+"subscription.trial.subscription_starts" = "订阅开始";
+
+// MARK: - Buttons
+"subscription.button.continue" = "继续";
+"subscription.button.restore" = "恢复";
+"subscription.button.restore_purchases" = "恢复购买";
+"subscription.button.processing" = "处理中...";
+"subscription.button.retry" = "重试";
+"subscription.button.loading" = "加载中...";
+
+// MARK: - Price Display
+"subscription.price.per_year" = "%@/年";
+"subscription.price.per_month" = "%@/月";
+"subscription.price.per_week" = "%@/周";
+"subscription.price.per_day" = "%@/天";
+"subscription.price.save_percent" = "节省 %d%%";
+"subscription.price.best_value" = "最佳优惠";
+"subscription.price.most_popular" = "最受欢迎";
+
+// MARK: - Legal
+"subscription.legal.privacy_policy" = "隐私政策";
+"subscription.legal.terms_of_service" = "服务条款";
+"subscription.legal.terms_conditions" = "条款与条件";
+"subscription.legal.auto_renewal_tip" = "自动续订，可随时取消。";
+"subscription.legal.lifetime_tip" = "一次性购买，终身有效。";
+
+// MARK: - Error Messages
+"subscription.error.load_failed" = "加载产品失败";
+"subscription.error.purchase_failed" = "购买失败";
+"subscription.error.purchase_cancelled" = "购买已取消";
+"subscription.error.purchase_pending" = "购买等待中";
+"subscription.error.unknown" = "发生未知错误";
+"subscription.error.no_products" = "暂无可用产品";
+"subscription.error.no_subscription_found" = "未找到有效订阅";
+"subscription.error.restore_failed" = "恢复购买失败";
+
+// MARK: - Benefits (Common)
+"subscription.benefit.unlimited_access" = "无限访问";
+"subscription.benefit.no_ads" = "无广告";
+"subscription.benefit.premium_features" = "高级功能";
+"subscription.benefit.priority_support" = "优先支持";
+"subscription.benefit.cloud_sync" = "云同步";
+"subscription.benefit.unlimited_templates" = "无限模板";
+"subscription.benefit.unlimited_timestamps" = "无限时间戳";
+"subscription.benefit.pro_filters" = "专业滤镜";
+"subscription.benefit.4k_export" = "4K 导出";
+"subscription.benefit.watermark_free" = "无水印";
+"subscription.benefit.all_premium" = "所有高级功能";
+
+// MARK: - Status Messages
+"subscription.status.active" = "已激活";
+"subscription.status.expired" = "已过期";
+"subscription.status.trial_active" = "试用中";
+"subscription.status.expires_on" = "到期时间：%@";
+"subscription.status.renews_on" = "续订时间：%@";
+
+// MARK: - Accessibility
+"subscription.accessibility.close_button" = "关闭付费墙";
+"subscription.accessibility.restore_button" = "恢复之前的购买";
+"subscription.accessibility.plan_selected" = "已选择 %@ 方案";
+"subscription.accessibility.price_option" = "%@，%@";

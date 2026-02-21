@@ -58,7 +58,7 @@ public struct JetCustomSwitch: View {
     public init(
         isOn: Binding<Bool>,
         isEnabled: Bool = true,
-        onColor: Color = AppColor.themeColor,
+        onColor: Color = AppColor.brandPrimary,
         offColor: Color = .white,
         borderColor: Color = .white,
         borderOpacity: Double = 0.4,
@@ -121,7 +121,7 @@ public extension JetCustomSwitch {
     static func pill(
         isOn: Binding<Bool>,
         isEnabled: Bool = true,
-        onColor: Color = AppColor.themeColor,
+        onColor: Color = AppColor.brandPrimary,
         offColor: Color = .white
     ) -> JetCustomSwitch {
         JetCustomSwitch(
@@ -138,7 +138,7 @@ public extension JetCustomSwitch {
     static func square(
         isOn: Binding<Bool>,
         isEnabled: Bool = true,
-        onColor: Color = AppColor.themeColor,
+        onColor: Color = AppColor.brandPrimary,
         offColor: Color = .white
     ) -> JetCustomSwitch {
         JetCustomSwitch(

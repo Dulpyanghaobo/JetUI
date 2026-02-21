@@ -122,23 +122,23 @@ public struct JetPaywallContent {
     
     public init(
         // Basic Appearance
-        brandTitle: String = "Unlock Pro",
+        brandTitle: String = SubL.Title.unlockPro,
         accentColor: Color = .blue,
         backgroundColor: Color = .black,
         backgroundImageName: String? = nil,
         
         // Common Texts
-        continueText: String = "Continue",
-        restoreText: String = "Restore Purchases",
-        processingText: String = "Processing...",
-        retryText: String = "Retry",
-        loadFailedText: String = "Failed to load products",
+        continueText: String = SubL.Button.continue,
+        restoreText: String = SubL.Button.restorePurchases,
+        processingText: String = SubL.Button.processing,
+        retryText: String = SubL.Button.retry,
+        loadFailedText: String = SubL.Error.loadFailed,
         
         // Legal Links
         privacyPolicyURL: URL? = nil,
         termsURL: URL? = nil,
-        privacyText: String = "Privacy Policy",
-        termsText: String = "Terms of Service",
+        privacyText: String = SubL.Legal.privacyPolicy,
+        termsText: String = SubL.Legal.termsOfService,
         
         // List Style Data
         benefits: [String] = [],
@@ -179,14 +179,14 @@ extension JetPaywallContent {
     /// 默认的 List 风格内容
     public static var defaultList: JetPaywallContent {
         JetPaywallContent(
-            brandTitle: "Unlock Pro",
+            brandTitle: SubL.Title.unlockPro,
             accentColor: .blue,
             backgroundColor: .black,
             benefits: [
-                "Unlimited Access",
-                "No Ads",
-                "Premium Features",
-                "Priority Support"
+                SubL.Benefit.unlimitedAccess,
+                SubL.Benefit.noAds,
+                SubL.Benefit.premiumFeatures,
+                SubL.Benefit.prioritySupport
             ]
         )
     }
@@ -194,31 +194,31 @@ extension JetPaywallContent {
     /// 默认的 Timeline 风格内容
     public static var defaultTimeline: JetPaywallContent {
         JetPaywallContent(
-            brandTitle: "Start Your Free Trial",
+            brandTitle: SubL.Title.startTrial,
             accentColor: .yellow,
             backgroundColor: .black,
             timelineSteps: [
                 TimelineStep(
                     icon: "lock.open.fill",
-                    title: "Today",
-                    subtitle: "Instant access to all features"
+                    title: SubL.Trial.todayFullAccess,
+                    subtitle: SubL.Trial.startsFeatures
                 ),
                 TimelineStep(
                     icon: "bell.fill",
-                    title: "Day 5",
-                    subtitle: "Reminder before trial ends"
+                    title: SubL.Trial.day5Reminder,
+                    subtitle: SubL.Trial.remindBeforeEnds
                 ),
                 TimelineStep(
                     icon: "star.fill",
-                    title: "Day 7",
-                    subtitle: "Trial converts to subscription"
+                    title: SubL.Trial.day7Ends,
+                    subtitle: SubL.Trial.subscriptionStarts
                 )
             ],
             complexBenefits: [
-                BenefitItem(icon: "infinity", title: "Unlimited Access"),
-                BenefitItem(icon: "cloud.fill", title: "Cloud Sync"),
-                BenefitItem(icon: "sparkles", title: "Premium Features"),
-                BenefitItem(icon: "xmark.circle.fill", title: "No Ads")
+                BenefitItem(icon: "infinity", title: SubL.Benefit.unlimitedAccess),
+                BenefitItem(icon: "cloud.fill", title: SubL.Benefit.cloudSync),
+                BenefitItem(icon: "sparkles", title: SubL.Benefit.premiumFeatures),
+                BenefitItem(icon: "xmark.circle.fill", title: SubL.Benefit.noAds)
             ]
         )
     }

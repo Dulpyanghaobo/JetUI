@@ -64,23 +64,6 @@ public struct JetTrialPaywallView: View {
         self.onDismiss = onDismiss
     }
     
-    /// 使用旧的初始化方式保持向后兼容
-    /// - Parameters:
-    ///   - config: Trial Paywall 配置
-    ///   - subscriptionConfig: 订阅配置（已废弃，改用全局配置）
-    ///   - onSuccess: 购买成功回调
-    @available(*, deprecated, message: "Use init(viewModel:config:onSuccess:onDismiss:) instead")
-    public init(
-        config: JetTrialPaywallConfig,
-        subscriptionConfig: JetSubscriptionConfig,
-        onSuccess: @escaping () -> Void = {}
-    ) {
-        self.externalViewModel = nil
-        self.config = config
-        self.onSuccess = onSuccess
-        self.onDismiss = nil
-    }
-    
     /// 使用 JetPaywallContent 初始化
     /// - Parameters:
     ///   - viewModel: 外部传入的 ViewModel（可选，不传则创建新的）
@@ -149,7 +132,7 @@ public struct JetTrialPaywallView: View {
             if vm.isLoading {
                 Color.black.opacity(0.4)
                     .ignoresSafeArea()
-                ProgressView("Loading...")
+                ProgressView(SubL.Button.loading)
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .foregroundColor(.white)
                     .padding()
@@ -572,18 +555,18 @@ public struct JetTrialPaywallConfig {
     public init(
         backgroundColor: Color = Color(red: 0.2, green: 0.1, blue: 0.3),
         accentColor: Color = .orange,
-        trialTitle: String = "How Free Trial Works",
-        lifetimeTitle: String = "Unlock Unlimited Access",
-        restoreButtonTitle: String = "Restore",
-        continueButtonTitle: String = "Continue",
-        processingTitle: String = "Processing...",
-        autoRenewalTip: String = "Auto-renewable. Cancel anytime.",
-        lifetimeTip: String = "One-time purchase, valid for life.",
+        trialTitle: String = SubL.Title.howTrialWorks,
+        lifetimeTitle: String = SubL.Title.unlimitedAccess,
+        restoreButtonTitle: String = SubL.Button.restore,
+        continueButtonTitle: String = SubL.Button.continue,
+        processingTitle: String = SubL.Button.processing,
+        autoRenewalTip: String = SubL.Legal.autoRenewalTip,
+        lifetimeTip: String = SubL.Legal.lifetimeTip,
         savePercentFormat: String = "Save %d%%",
         privacyPolicyURL: URL = URL(string: "https://example.com/privacy")!,
-        privacyPolicyTitle: String = "Privacy Policy",
+        privacyPolicyTitle: String = SubL.Legal.privacyPolicy,
         termsURL: URL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!,
-        termsTitle: String = "Terms & Conditions",
+        termsTitle: String = SubL.Legal.termsConditions,
         trialSteps: [TrialStep] = [],
         benefits: [Benefit] = []
     ) {
@@ -618,8 +601,8 @@ public struct JetTrialPaywallConfig {
         self.restoreButtonTitle = content.restoreText
         self.continueButtonTitle = content.continueText
         self.processingTitle = content.processingText
-        self.autoRenewalTip = "Auto-renewable. Cancel anytime."
-        self.lifetimeTip = "One-time purchase, valid for life."
+        self.autoRenewalTip = SubL.Legal.autoRenewalTip
+        self.lifetimeTip = SubL.Legal.lifetimeTip
         self.savePercentFormat = "Save %d%%"
         self.privacyPolicyURL = content.privacyPolicyURL ?? URL(string: "https://example.com/privacy")!
         self.privacyPolicyTitle = content.privacyText
@@ -637,27 +620,3 @@ public struct JetTrialPaywallConfig {
         }
     }
 }
-
-// MARK: - Preview
-
-#if DEBUG
-struct JetTrialPaywallView_Previews: PreviewProvider {
-    static var previews: some View {
-        JetTrialPaywallView(
-            config: .init(
-                trialSteps: [
-                    .init(iconName: "checkmark.circle", title: "Today - Full Access", message: "Start capture with Pro features"),
-                    .init(iconName: "bell.circle", title: "Day 5 - Trial Reminder", message: "We'll remind you before trial ends"),
-                    .init(iconName: "star.circle", title: "Day 7 - Trial Ends", message: "Subscription starts")
-                ],
-                benefits: [
-                    .init(iconName: "star.fill", title: "Unlimited Timestamps"),
-                    .init(iconName: "camera.filters", title: "Professional Filters"),
-                    .init(iconName: "crown.fill", title: "All Premium Features"),
-                    .init(iconName: "nosign", title: "No Ads")
-                ]
-            )
-        )
-    }
-}
-#endif

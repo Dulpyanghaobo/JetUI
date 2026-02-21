@@ -2,6 +2,19 @@
 
 **JetSubscription** 是一个基于 **StoreKit 2** 的轻量级、模块化 iOS 订阅管理库。它提供了从底层收据验证、本地安全缓存到现成的高颜值 Paywall UI 的一站式解决方案。
 
+## 📋 目录
+
+- [核心特性](#-核心特性)
+- [快速开始](#-快速开始-quick-start)
+- [使用 Paywall](#-使用-paywall-ui)
+- [本地化支持](#-本地化支持-localization)
+- [Analytics 埋点](#-analytics-埋点)
+- [架构说明](#-架构说明)
+- [优化建议](#-优化建议)
+- [注意事项](#️-注意事项)
+
+---
+
 ## ✨ 核心特性
 
 * **StoreKit 2 Native**: 完全基于现代 Swift Concurrency (async/await) 和 StoreKit 2 API。
@@ -289,3 +302,296 @@ JetIAPBootstrap(config: config, accessGroup: "group.com.yourapp.shared")
 
 
 3. **StoreKit Testing**: 在开发阶段，请使用 Xcode 的 `.storekit` 配置文件进行本地测试。
+
+---
+
+## 🌍 本地化支持 (Localization)
+
+订阅模块提供了完整的多语言支持，所有 UI 文案都可以本地化。
+
+### 文件结构
+
+```
+Features/Subscription/
+├── Resources/
+│   ├── en.lproj/
+│   │   └── Subscription.strings    # 英文
+│   └── zh-Hans.lproj/
+│       └── Subscription.strings    # 简体中文
+└── Strings+Subscription.swift      # Swift 字符串扩展
+```
+
+### 使用方式
+
+使用 `SubL` 命名空间访问本地化字符串：
+
+```swift
+import JetUI
+
+// 标题
+let title = SubL.Title.unlockPro          // "Unlock Pro" / "解锁专业版"
+let trial = SubL.Title.startTrial         // "Start Your Free Trial"
+
+// 按钮
+let continueBtn = SubL.Button.continue    // "Continue" / "继续"
+let restoreBtn = SubL.Button.restore      // "Restore" / "恢复"
+
+// 订阅周期
+let yearly = SubL.Period.yearly           // "Yearly" / "年度"
+let months = SubL.Period.months(3)        // "3 Months" / "3 个月"
+
+// 试用相关
+let freeTrial = SubL.Trial.dayFreeTrial(7)  // "7 Day Free Trial"
+let trialMsg = SubL.Trial.freeThenPrice(trialPeriod: "7 days", price: "$9.99/year")
+
+// 价格显示
+let priceTag = SubL.Price.perYear("$29.99")  // "$29.99/year"
+let saveTag = SubL.Price.savePercent(50)     // "Save 50%"
+
+// 错误信息
+let error = SubL.Error.purchaseFailed        // "Purchase failed"
+
+// 权益功能点
+let benefit1 = SubL.Benefit.unlimitedAccess  // "Unlimited Access"
+let benefit2 = SubL.Benefit.noAds            // "No Ads"
+```
+
+### 添加新语言
+
+1. 在 `Resources/` 下创建新的语言目录，如 `ja.lproj/`
+2. 复制 `en.lproj/Subscription.strings` 到新目录
+3. 翻译所有字符串值
+4. 确保 key 保持不变
+
+### 字符串分类
+
+| 分类 | 命名空间 | 用途 |
+|-----|---------|------|
+| 标题 | `SubL.Title` | Paywall 页面标题 |
+| 周期 | `SubL.Period` | 订阅周期文案 |
+| 试用 | `SubL.Trial` | 免费试用相关 |
+| 按钮 | `SubL.Button` | 按钮文案 |
+| 价格 | `SubL.Price` | 价格显示 |
+| 法律 | `SubL.Legal` | 隐私政策、条款等 |
+| 错误 | `SubL.Error` | 错误提示 |
+| 权益 | `SubL.Benefit` | 功能点描述 |
+| 状态 | `SubL.Status` | 订阅状态 |
+| 无障碍 | `SubL.Accessibility` | VoiceOver 等 |
+
+---
+
+## 🔧 优化建议
+
+基于代码审查，以下是订阅模块的优化建议：
+
+### 1. 架构优化
+
+#### 1.1 拆分 ViewModel 职责
+**现状**: `JetPaywallViewModel` 同时处理产品加载、购买、恢复、埋点等多项职责。
+
+**建议**: 考虑拆分为更细粒度的组件：
+```swift
+// 产品加载服务
+class ProductCatalogService { }
+
+// 购买处理器
+class PurchaseProcessor { }
+
+// 埋点代理
+class PaywallAnalyticsProxy { }
+```
+
+#### 1.2 状态管理优化
+**现状**: 使用多个 `@Published` 属性管理状态。
+
+**建议**: 考虑使用状态枚举集中管理：
+```swift
+enum PaywallState {
+    case idle
+    case loading
+    case ready(products: [Product])
+    case purchasing(product: Product)
+    case success
+    case error(message: String)
+}
+```
+
+### 2. 错误处理优化
+
+#### 2.1 错误类型扩展
+**建议**: 扩展 `JetStoreError` 以支持更多场景：
+```swift
+enum JetStoreError: Error {
+    case cancelled
+    case pending
+    case unknown
+    case noProducts
+    case purchaseFailed(String)
+    case networkError(underlying: Error)  // 新增
+    case verificationFailed               // 新增
+    case serverBindingFailed              // 新增
+}
+```
+
+#### 2.2 错误恢复策略
+**建议**: 为后端绑定失败添加重试机制：
+```swift
+func bindToBackendWithRetry(jws: String, maxRetries: Int = 3) async throws {
+    var lastError: Error?
+    for attempt in 1...maxRetries {
+        do {
+            try await accountService.bindSubscription(signedPayLoad: jws, ...)
+            return
+        } catch {
+            lastError = error
+            try await Task.sleep(nanoseconds: UInt64(attempt * 1_000_000_000))
+        }
+    }
+    throw lastError ?? JetStoreError.unknown
+}
+```
+
+### 3. UI 组件优化
+
+#### 3.1 `JetPriceRow` 可访问性
+**建议**: 添加完整的 VoiceOver 支持：
+```swift
+.accessibilityLabel(SubL.Accessibility.priceOption(name: title, price: price))
+.accessibilityHint(isSelected ? SubL.Accessibility.planSelected(title) : "")
+.accessibilityAddTraits(isSelected ? .isSelected : [])
+```
+
+#### 3.2 加载状态骨架屏
+**建议**: 在产品加载时显示骨架屏而非简单的进度指示器：
+```swift
+struct PriceRowSkeleton: View {
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.white.opacity(0.2))
+                    .frame(width: 80, height: 20)
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.white.opacity(0.1))
+                    .frame(width: 150, height: 14)
+            }
+            Spacer()
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.white.opacity(0.2))
+                .frame(width: 60, height: 20)
+        }
+        .padding()
+        .shimmer() // 添加闪烁动画
+    }
+}
+```
+
+### 4. 缓存优化
+
+#### 4.1 产品信息缓存
+**建议**: 缓存产品信息以减少 StoreKit 请求：
+```swift
+actor ProductCache {
+    private var products: [String: Product] = [:]
+    private var lastFetchTime: Date?
+    private let cacheValidDuration: TimeInterval = 3600 // 1小时
+    
+    func getProducts(ids: [String]) async throws -> [Product] {
+        if let lastFetch = lastFetchTime,
+           Date().timeIntervalSince(lastFetch) < cacheValidDuration,
+           !products.isEmpty {
+            return Array(products.values)
+        }
+        // 从 StoreKit 获取
+        let fetched = try await Product.products(for: ids)
+        // 更新缓存
+        for product in fetched {
+            products[product.id] = product
+        }
+        lastFetchTime = Date()
+        return fetched
+    }
+}
+```
+
+### 5. 测试覆盖
+
+#### 5.1 Mock 服务协议
+**现状**: `JetStoreServiceProtocol` 支持 Mock，但未提供默认 Mock 实现。
+
+**建议**: 提供测试用 Mock：
+```swift
+#if DEBUG
+class MockStoreService: JetStoreServiceProtocol {
+    var mockProducts: [Product] = []
+    var mockIsPro = false
+    var shouldFailPurchase = false
+    
+    func fetchProducts() async throws -> [Product] {
+        return mockProducts
+    }
+    
+    func isEntitledToPro() async -> Bool {
+        return mockIsPro
+    }
+    
+    // ... 其他方法
+}
+#endif
+```
+
+### 6. 性能优化
+
+#### 6.1 减少不必要的刷新
+**建议**: 在 `refreshEntitlements()` 中添加节流：
+```swift
+private var lastRefreshTime: Date?
+private let minRefreshInterval: TimeInterval = 5
+
+func refreshEntitlements() async {
+    guard lastRefreshTime == nil || 
+          Date().timeIntervalSince(lastRefreshTime!) > minRefreshInterval else {
+        return
+    }
+    lastRefreshTime = Date()
+    isPro = await storeService.isEntitledToPro()
+}
+```
+
+---
+
+## 📁 文件清单
+
+```
+Features/Subscription/
+├── JetSubscriptionConfig.swift      # 配置模型
+├── JetSubscriptionManager.swift     # 订阅管理器
+├── JetPaywallTypes.swift            # 类型定义
+├── JetStoreService.swift            # StoreKit 服务
+├── Strings+Subscription.swift       # 本地化字符串
+├── Subscription_README.md           # 本文档
+│
+├── Core/
+│   ├── JetEntitlementCache.swift    # 权益缓存
+│   ├── JetKeychainStore.swift       # Keychain 存储
+│   └── JetTransactionObserver.swift # 交易监听
+│
+├── ViewModels/
+│   └── JetPaywallViewModel.swift    # Paywall VM
+│
+├── Views/
+│   ├── JetPaywall.swift             # 统一入口
+│   ├── JetPaywallView.swift         # 标准 Paywall
+│   ├── JetTrialPaywallView.swift    # 试用 Paywall
+│   └── JetPriceRow.swift            # 价格行组件
+│
+└── Resources/
+    ├── en.lproj/Subscription.strings
+    └── zh-Hans.lproj/Subscription.strings
+```
+
+---
+
+**文档版本**: 2.0  
+**最后更新**: 2026-02-21  
+**维护者**: JetUI Team

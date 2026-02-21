@@ -48,13 +48,6 @@ public struct JetPaywall: View {
     @StateObject private var viewModel = JetPaywallViewModel()
     
     // MARK: - Initializer
-    
-    /// 创建统一的 Paywall 视图
-    /// - Parameters:
-    ///   - style: UI 风格（.list 或 .timeline）
-    ///   - content: 内容配置
-    ///   - onSuccess: 购买成功回调
-    ///   - onDismiss: 关闭回调（可选）
     public init(
         style: JetPaywallStyle,
         content: JetPaywallContent,

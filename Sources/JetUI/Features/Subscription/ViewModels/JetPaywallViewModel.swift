@@ -39,10 +39,10 @@ public struct JetPlanDisplay: Identifiable {
             self.title = customTitle
         } else if let period = product.subscription?.subscriptionPeriod {
             switch period.unit {
-            case .year: self.title = "Yearly"
-            case .month: self.title = period.value == 1 ? "Monthly" : "\(period.value) Months"
-            case .week: self.title = "Weekly"
-            case .day: self.title = period.value == 7 ? "Weekly" : "\(period.value) Days"
+            case .year: self.title = SubL.Period.yearly
+            case .month: self.title = period.value == 1 ? SubL.Period.monthly : SubL.Period.months(period.value)
+            case .week: self.title = SubL.Period.weekly
+            case .day: self.title = period.value == 7 ? SubL.Period.weekly : SubL.Period.days(period.value)
             @unknown default: self.title = product.displayName
             }
         } else {
@@ -199,7 +199,7 @@ public final class JetPaywallViewModel: ObservableObject {
                 AnalyticsManager.logRestoreSuccess()
                 shouldDismissPaywall = true
             } else {
-                errorMessage = "No active subscription found"
+                errorMessage = SubL.Error.noActiveSubscription
                 AnalyticsManager.logEvent(JetPaywallEvent.restoreNoSubscription)
             }
             
@@ -224,14 +224,14 @@ public final class JetPaywallViewModel: ObservableObject {
             let period = intro.period
             let trialDays: String
             switch period.unit {
-            case .day: trialDays = "\(period.value) day"
-            case .week: trialDays = "\(period.value * 7) day"
-            case .month: trialDays = "\(period.value) month"
-            case .year: trialDays = "\(period.value) year"
+            case .day: trialDays = SubL.Period.days(period.value)
+            case .week: trialDays = SubL.Period.days(period.value * 7)
+            case .month: trialDays = SubL.Period.months(period.value)
+            case .year: trialDays = SubL.Period.years(period.value)
             @unknown default: trialDays = ""
             }
-            trialBadge = "\(trialDays) free trial"
-            subline = "\(trialDays) free, then \(product.displayPrice)"
+            trialBadge = SubL.Trial.freeTrial(trialDays)
+            subline = SubL.Trial.freeThenPrice(trialDays, product.displayPrice)
         }
         
         // 生成续订说明

@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "JetUI",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v17),
         .macOS(.v12)
@@ -45,7 +46,9 @@ let package = Package(
                 "Features/Settings/README.md"
             ],
             resources: [
-                .process("Resources/Media.xcassets")
+                .process("Resources/Media.xcassets"),
+                // Subscription module localization resources
+                .process("Features/Subscription/Resources")
             ]
         ),
         .testTarget(
