@@ -12,7 +12,7 @@ import Combine
 // MARK: - Plan Display Model
 
 /// 订阅计划显示模型
-public struct JetPlanDisplay: Identifiable {
+public struct JetPlanDisplay: Identifiable, Equatable {
     public let id: String
     public let product: Product
     public let title: String

@@ -2,41 +2,30 @@
 //  JetTrialPaywallView.swift
 //  JetUI
 //
-//  试用版 Paywall 视图 - 展示免费试用流程和价格选项
-//
 
 import SwiftUI
 import StoreKit
 
-/// 试用版 Paywall 视图
+/// 试用版 Paywall 视图 - 展示免费试用流程和价格选项
 public struct JetTrialPaywallView: View {
-    
-    // MARK: - Environment
     
     @Environment(\.dismiss) private var dismiss
     
-    // MARK: - Properties
-    
-    /// 外部注入的 ViewModel（优先使用）
     private var externalViewModel: JetPaywallViewModel?
-    
-    /// 内部创建的 ViewModel（当未提供外部 VM 时使用）
     @StateObject private var internalViewModel = JetPaywallViewModel()
     
-    /// 统一的 ViewModel 访问计算属性
     private var vm: JetPaywallViewModel {
         externalViewModel ?? internalViewModel
     }
     
     @State private var didLogView = false
     @State private var restoreTapPending = false
+    @State private var autoSelectedLogged = false // 新增：追踪是否已执行自动选中
     @State private var isShimmering = false
     
     private let config: JetTrialPaywallConfig
     private let onSuccess: () -> Void
     private let onDismiss: (() -> Void)?
-    
-    // MARK: - Computed Properties
     
     private var isYearlySelected: Bool {
         guard let id = vm.selectedProductID,
@@ -44,14 +33,6 @@ public struct JetTrialPaywallView: View {
         return plan.isYearly
     }
     
-    // MARK: - Initializers
-    
-    /// 使用 JetTrialPaywallConfig 初始化（支持外部注入 ViewModel）
-    /// - Parameters:
-    ///   - viewModel: 外部传入的 ViewModel（可选，不传则创建新的）
-    ///   - config: Trial Paywall 配置
-    ///   - onSuccess: 购买成功回调
-    ///   - onDismiss: 关闭回调
     public init(
         viewModel: JetPaywallViewModel? = nil,
         config: JetTrialPaywallConfig,
@@ -64,12 +45,6 @@ public struct JetTrialPaywallView: View {
         self.onDismiss = onDismiss
     }
     
-    /// 使用 JetPaywallContent 初始化
-    /// - Parameters:
-    ///   - viewModel: 外部传入的 ViewModel（可选，不传则创建新的）
-    ///   - content: 统一的内容容器
-    ///   - onSuccess: 购买成功回调
-    ///   - onDismiss: 关闭回调
     public init(
         viewModel: JetPaywallViewModel? = nil,
         content: JetPaywallContent,
@@ -82,11 +57,27 @@ public struct JetTrialPaywallView: View {
         self.onDismiss = onDismiss
     }
     
-    // MARK: - Body
+    // 补齐：默认选中 Yearly 的交互逻辑
+    private func selectYearlyByDefault() {
+        guard vm.selectedProductID == nil else { return }
+        
+        if let yearly = vm.plans.first(where: { $0.isYearly }) {
+            vm.selectedProductID = yearly.id
+            if !autoSelectedLogged {
+                autoSelectedLogged = true
+                // AnalyticsManager.logEvent("paywall_option_autoselect"...)
+            }
+        } else if let first = vm.plans.first {
+            vm.selectedProductID = first.id
+            if !autoSelectedLogged {
+                autoSelectedLogged = true
+                // AnalyticsManager.logEvent("paywall_option_autoselect"...)
+            }
+        }
+    }
     
     public var body: some View {
         ZStack(alignment: .top) {
-            // 背景渐变
             Rectangle()
                 .fill(
                     LinearGradient(
@@ -101,25 +92,34 @@ public struct JetTrialPaywallView: View {
             VStack(spacing: 24) {
                 header
                 
-                // 动态标题
                 Text(isYearlySelected ? config.trialTitle : config.lifetimeTitle)
                     .font(.title2.bold())
                     .foregroundColor(.white)
                 
-                // 顶部内容
                 topContent
                     .padding(.bottom, 16)
                 
-                // 价格选项
                 priceOptions
                     .padding(.top, 8)
                 
                 Spacer(minLength: 8)
                 
-                // 底部区域
                 VStack(spacing: 0) {
-                    renewalHint
-                        .frame(height: 32, alignment: .center)
+                    // 补齐：固定高度以防止切换时 UI 跳动
+                    Group {
+                        if let hint = vm.nextRenewalHint {
+                            Text(hint)
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 8)
+                        } else {
+                            Text(" ")
+                                .font(.caption)
+                                .foregroundColor(.clear)
+                        }
+                    }
+                    .frame(height: 32, alignment: .center)
                     
                     continueButton
                     
@@ -128,10 +128,10 @@ public struct JetTrialPaywallView: View {
                 }
             }
             .padding(20)
-            
+            .task { selectYearlyByDefault() }
+            .onChange(of: vm.plans) { _ in selectYearlyByDefault() }
             if vm.isLoading {
-                Color.black.opacity(0.4)
-                    .ignoresSafeArea()
+                Color.black.opacity(0.4).ignoresSafeArea()
                 ProgressView(SubL.Button.loading)
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     .foregroundColor(.white)
@@ -151,12 +151,11 @@ public struct JetTrialPaywallView: View {
         .onAppear {
             if !didLogView {
                 didLogView = true
-                AnalyticsManager.logPaywallView(variant: "trial")
+                // AnalyticsManager.logPaywallView(variant: "trial")
             }
         }
     }
 }
-
 // MARK: - Subviews
 
 private extension JetTrialPaywallView {

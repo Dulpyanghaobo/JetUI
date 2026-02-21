@@ -205,68 +205,76 @@ public struct JetPaywallView: View {
     // MARK: - Body
     
     public var body: some View {
-        GeometryReader { proxy in
-            let topInset = proxy.safeAreaInsets.top + 42
-            let bottomInset = proxy.safeAreaInsets.bottom
-            let heroH = min(max(proxy.size.height * 0.38, 240), 420)
-            
-            ZStack(alignment: .top) {
-                // 背景
-                Color.black.ignoresSafeArea()
+            GeometryReader { proxy in
+                let topInset = proxy.safeAreaInsets.top + 42
+                let bottomInset = proxy.safeAreaInsets.bottom
+                let heroH = min(max(proxy.size.height * 0.38, 240), 420)
                 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 24) {
-                        // Hero 区域
-                        heroSection(heroH: heroH, topPadding: topInset + headerHeight)
-                        
-                        // 功能点列表
-                        if !configuration.benefits.isEmpty {
-                            benefitList
+                ZStack(alignment: .top) {
+                    Color.black.ignoresSafeArea()
+                    
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 24) {
+                            // 修正传入的 topPadding，确切对齐原版
+                            heroSection(heroH: heroH, topPadding: topInset + headerHeight)
+                            
+                            if !configuration.benefits.isEmpty {
+                                benefitList
+                                    .frame(maxWidth: contentMaxWidth)
+                                    .padding(.horizontal, 40)
+                                    .padding(.top, -topInset - 16)
+                            }
+                            
+                            priceOptions
                                 .frame(maxWidth: contentMaxWidth)
-                                .padding(.horizontal, 40)
-                                .padding(.top, -topInset - 16)
+                                .padding(.horizontal, 20)
+                            
+                            Spacer(minLength: 96)
+                        }
+                    }
+                    .coordinateSpace(name: "paywallScroll")
+                    
+                    headerBar
+                        .frame(height: headerHeight)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, topInset)
+                        .padding(.horizontal, 16)
+                }
+                .safeAreaInset(edge: .bottom) {
+                    VStack(spacing: 0) {
+                        // 补充：原版也有在这里加上 renewalHint 预留位置，避免硬切
+                        if let hint = viewModel.nextRenewalHint {
+                            Text(hint)
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 8)
                         }
                         
-                        // 价格选项
-                        priceOptions
+                        continueButton
+                            .frame(maxWidth: contentMaxWidth)
+                        
+                        legalLinks
                             .frame(maxWidth: contentMaxWidth)
                             .padding(.horizontal, 20)
                         
-                        // 底部空间
-                        Spacer(minLength: 96)
+                        // 补充：轻微的顶端渐隐占位符，避免硬切
+                        Rectangle()
+                            .fill(.clear)
+                            .frame(height: 0)
                     }
-                }
-                .coordinateSpace(name: "paywallScroll")
-                
-                // 固定顶栏
-                headerBar
-                    .frame(height: headerHeight)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, topInset)
-                    .padding(.horizontal, 16)
-            }
-            // 固定底部
-            .safeAreaInset(edge: .bottom) {
-                VStack(spacing: 0) {
-                    continueButton
-                        .frame(maxWidth: contentMaxWidth)
-                    
-                    legalLinks
-                        .frame(maxWidth: contentMaxWidth)
-                        .padding(.horizontal, 20)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, max(16, bottomInset))
-                .background(
-                    LinearGradient(
-                        colors: [Color.black.opacity(0.0), Color.black.opacity(0.9)],
-                        startPoint: .top, endPoint: .bottom
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+                    .padding(.bottom, max(16, bottomInset))
+                    .background(
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.0), Color.black.opacity(0.9)],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                        .ignoresSafeArea(edges: .bottom)
                     )
-                    .ignoresSafeArea(edges: .bottom)
-                )
-            }
+                }
             .onChange(of: viewModel.shouldDismissPaywall) { shouldDismiss in
                 if shouldDismiss {
                     onSuccess()
@@ -276,48 +284,46 @@ public struct JetPaywallView: View {
         }
     }
     
-    // MARK: - Hero Section
-    
     @ViewBuilder
-    private func heroSection(heroH: CGFloat, topPadding: CGFloat) -> some View {
-        ZStack(alignment: .top) {
-            GeometryReader { g in
-                let y = g.frame(in: .named("paywallScroll")).minY
-                let pullDown = max(0, y)
-                let maxExtra: CGFloat = 0.30
-                let scale = 1 + min(maxExtra, (abs(y) / heroH) * maxExtra)
-                
-                Group {
-                    if let imageName = configuration.backgroundImageName {
-                        Image(imageName)
-                            .resizable()
-                            .scaledToFill()
-                    } else {
-                        LinearGradient(
-                            colors: [configuration.accentColor.opacity(0.3), Color.black],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
+        private func heroSection(heroH: CGFloat, topPadding: CGFloat) -> some View {
+            ZStack(alignment: .top) {
+                GeometryReader { g in
+                    let y = g.frame(in: .named("paywallScroll")).minY
+                    let pullDown = max(0, y)
+                    let maxExtra: CGFloat = 0.30
+                    let scale = 1 + min(maxExtra, (abs(y) / heroH) * maxExtra)
+                    
+                    Group {
+                        if let imageName = configuration.backgroundImageName {
+                            Image(imageName)
+                                .resizable()
+                                .scaledToFill()
+                        } else {
+                            LinearGradient(
+                                colors: [configuration.accentColor.opacity(0.3), Color.black],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        }
                     }
-                }
-                .scaleEffect(scale, anchor: .top)
-                .offset(y: -pullDown)
-                .overlay(
-                    LinearGradient(
-                        colors: [Color.black.opacity(0.0), Color.black.opacity(0.85)],
-                        startPoint: .top, endPoint: .bottom
+                    .scaleEffect(scale, anchor: .top)
+                    .offset(y: -pullDown) // 关键：抵消下拉位移，使其停留在顶部
+                    .overlay(
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.0), Color.black.opacity(0.85)],
+                            startPoint: .top, endPoint: .bottom
+                        )
                     )
-                )
-                .clipped()
+                    .clipped()
+                }
+                .frame(height: heroH)
+                
+                // 标题不随缩放影响，确保排版稳定
+                brandTitleView
+                    .padding(.horizontal, 20)
+                    .padding(.top, topPadding)
             }
-            .frame(height: heroH)
-            
-            // 品牌标题
-            brandTitleView
-                .padding(.horizontal, 20)
-                .padding(.top, topPadding)
         }
-    }
     
     @ViewBuilder
     private var brandTitleView: some View {

@@ -109,33 +109,3 @@ public struct JetPriceRow: View {
         .onTapGesture { action() }
     }
 }
-
-// MARK: - Preview
-
-#if DEBUG
-struct JetPriceRow_Previews: PreviewProvider {
-    static var previews: some View {
-        ZStack {
-            Color.black
-            VStack(spacing: 16) {
-                JetPriceRow(
-                    title: "Yearly",
-                    message: "7 days free, then $29.99/year",
-                    price: "$29.99",
-                    isSelected: true,
-                    cornerTag: "Save 75%",
-                    allowHighlight: true
-                ) {}
-                
-                JetPriceRow(
-                    title: "Weekly",
-                    message: "$2.99/week",
-                    price: "$2.99",
-                    isSelected: false
-                ) {}
-            }
-            .padding()
-        }
-    }
-}
-#endif
