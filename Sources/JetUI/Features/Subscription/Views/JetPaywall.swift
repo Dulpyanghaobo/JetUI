@@ -45,12 +45,13 @@ public struct JetPaywall: View {
     private let onDismiss: (() -> Void)?
     
     /// 共享的 ViewModel（在此持有 StateObject）
-    @StateObject private var viewModel = JetPaywallViewModel()
+    @StateObject private var viewModel: JetPaywallViewModel
     
     // MARK: - Initializer
     public init(
         style: JetPaywallStyle,
         content: JetPaywallContent,
+        source: String = "unknown",
         onSuccess: @escaping () -> Void = {},
         onDismiss: (() -> Void)? = nil
     ) {
@@ -58,6 +59,7 @@ public struct JetPaywall: View {
         self.content = content
         self.onSuccess = onSuccess
         self.onDismiss = onDismiss
+        self._viewModel = StateObject(wrappedValue: JetPaywallViewModel(paywallSource: source))
     }
     
     // MARK: - Body
@@ -95,12 +97,14 @@ extension JetPaywall {
     /// - Returns: JetPaywall 实例
     public static func list(
         content: JetPaywallContent = .defaultList,
+        source: String = "unknown",
         onSuccess: @escaping () -> Void = {},
         onDismiss: (() -> Void)? = nil
     ) -> JetPaywall {
         JetPaywall(
             style: .list,
             content: content,
+            source: source,
             onSuccess: onSuccess,
             onDismiss: onDismiss
         )
@@ -114,12 +118,14 @@ extension JetPaywall {
     /// - Returns: JetPaywall 实例
     public static func timeline(
         content: JetPaywallContent = .defaultTimeline,
+        source: String = "unknown",
         onSuccess: @escaping () -> Void = {},
         onDismiss: (() -> Void)? = nil
     ) -> JetPaywall {
         JetPaywall(
             style: .timeline,
             content: content,
+            source: source,
             onSuccess: onSuccess,
             onDismiss: onDismiss
         )

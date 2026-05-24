@@ -23,13 +23,13 @@ import SwiftUI
 public enum JetUI {
     /// 库版本号
     public static let version = "2.0.0"
-    
+
     // MARK: - Theme System
-    
+
     /// Current theme configuration
     /// Defaults to `DefaultTheme` if no custom theme is configured
     public private(set) static var theme: JetThemeConfig = DefaultTheme()
-    
+
     /// Configure a custom theme for the library
     /// - Parameter config: Custom theme configuration conforming to `JetThemeConfig`
     ///
@@ -41,26 +41,28 @@ public enum JetUI {
     public static func configureTheme(_ config: JetThemeConfig) {
         theme = config
     }
-    
+
     // MARK: - Subscription Configuration
 
     public static var subscriptionConfig: JetSubscriptionConfig?
 
     public static var paywallConfiguration: JetPaywallConfiguration?
-    
+
+    public private(set) static var subscriptionManager: JetSubscriptionManager?
+
     /// 配置日志 subsystem
     /// - Parameter subsystem: Bundle identifier 或自定义 subsystem
     public static func configureLogger(subsystem: String) {
         CSLogger.subsystem = subsystem
     }
-    
+
     /// 配置认证 API
     /// - Parameter configuration: API 配置
     public static func configureAuth(_ configuration: APIConfiguration) {
         AuthTarget.configuration = configuration
         NetworkCore.shared.authSession = AuthSession.shared
     }
-    
+
     /// 配置账户 API
     /// - Parameters:
     ///   - baseURL: API 服务器地址
@@ -71,26 +73,26 @@ public enum JetUI {
             tokenProvider: tokenProvider
         )
     }
-    
+
     /// 配置分析系统
     /// - Parameter enabled: 是否启用分析
     public static func configureAnalytics(enabled: Bool = true) {
         AnalyticsManager.isEnabled = enabled
     }
-    
+
     /// 配置 MemoryMonitor 的分析回调
     /// - Parameter analyticsLogger: 分析日志回调
     public static func configureMemoryMonitor(analyticsLogger: ((String, [String: Any]) -> Void)?) {
         MemoryMonitor.shared.analyticsLogger = analyticsLogger
     }
-    
+
     /// 配置 CacheManager 的日志回调
     /// - Parameter logger: 日志回调
     @MainActor
     public static func configureCacheManager(logger: ((String) -> Void)?) {
         CacheManager.shared.logger = logger
     }
-    
+
     /// 配置订阅服务
     /// - Parameters:
     ///   - config: 订阅配置
@@ -102,7 +104,7 @@ public enum JetUI {
     ) {
         subscriptionConfig = config
         self.paywallConfiguration = paywallConfiguration
-        _ = JetSubscriptionManager()
+        subscriptionManager = JetSubscriptionManager()
     }
 }
 
@@ -110,7 +112,7 @@ public enum JetUI {
 
 /*
  JetUI 模块结构 (v2.0)：
- 
+
  📁 Core/                          # 核心基础设施层
     📁 Logger/
        - CSLogger.swift            : 统一日志系统
@@ -123,15 +125,15 @@ public enum JetUI {
        - JetDateFormatter.swift    : 日期格式化工具
        - StateHelpers.swift        : SwiftUI 状态更新辅助函数
        - JetAssetSaver.swift       : 图片资源保存工具
- 
+
  📁 Extensions/                    # 系统类型扩展
     - UIImage+Jet.swift            : UIImage 扩展（裁剪、缩放、着色）
     - View+Jet.swift               : SwiftUI View 扩展（返回按钮、条件修饰器）
- 
+
  📁 Theme/                         # 主题系统
     - AppFont.swift                : 字体定义
     - AppColor.swift               : 颜色定义
- 
+
  📁 Components/                    # UI 组件库
     📁 Toast/
        - JetToastView.swift        : Toast 通知组件 + ToastManager
@@ -146,7 +148,7 @@ public enum JetUI {
        - JetLottieView.swift       : Lottie 动画封装
     📁 Image/
        - JetCacheAsyncImage.swift  : 带缓存的异步图片组件
- 
+
  📁 Network/                       # 网络层
     📁 Core/
        - NetworkCore.swift         : Moya 网络核心
@@ -160,16 +162,16 @@ public enum JetUI {
        - AccountTarget.swift       : 账户/订阅 API 端点
        - AccountService.swift      : 账户/订阅 Service 层
        - LoginResult.swift         : 登录结果模型
- 
+
  📁 Auth/                          # 认证管理
     - AuthManager.swift            : 统一认证管理器
- 
+
  📁 Firebase/                      # Firebase 服务层
     📁 Analytics/
        - AnalyticsManager.swift    : 分析系统（Firebase Analytics）
     📁 Storage/
        - JetStorageManager.swift   : Firebase Storage 统一管理器
- 
+
  📁 Features/                      # 功能模块
     📁 Settings/                   # 设置模块
        - JetSettingsView.swift     : 可配置样式的设置页面
@@ -199,19 +201,19 @@ public enum JetUI {
     📁 Onboarding/                 # 引导模块
        - JetOnboardingView.swift   : 引导页视图
     📁 Feedback/                   # 反馈模块（计划中）
- 
+
  📁 Models/                        # 共享数据模型
     - JetAppItem.swift             : App 推荐项模型
     - JetAppItem+Presets.swift     : 预设 App 配置
- 
+
  📁 Resources/                     # 资源文件
     📁 Media.xcassets/             : 图片资源
- 
+
  使用示例：
- 
+
  ```swift
  import JetUI
- 
+
  // 1. 配置
  JetUI.configureLogger(subsystem: "com.myapp")
  JetUI.configureAuth(MyAPIConfig())
@@ -219,46 +221,46 @@ public enum JetUI {
      baseURL: URL(string: "https://api.example.com")!,
      tokenProvider: { AuthManager.shared.currentLoginResult?.token }
  )
- 
+
  // 2. 使用主题
  Text("Hello")
      .font(AppFont.body)
      .foregroundColor(AppColor.primary)
- 
+
  // 3. 日志
  CSLogger.info("App started", category: .general)
- 
+
  // 4. 缓存管理
  await CacheManager.shared.set(key: "user", value: userData, ttl: 3600)
  let cached = await CacheManager.shared.get(key: "user", as: UserData.self)
- 
+
  // 5. 熔断器
  let breaker = CircuitBreakerRegistry.shared.breaker(for: "api")
  let result = try await breaker.execute {
      try await apiCall()
  }
- 
+
  // 6. 内存监控
  MemoryMonitor.logMemoryUsage(tag: "AppLaunch")
  let report = MemoryMonitor.generateReport()
- 
+
  // 7. Toast 通知
  Text("Content")
      .toast(message: "保存成功", type: .success, isPresented: $showToast)
- 
+
  // 8. 状态辅助
  setIfChanged(&count, newCount)
- 
+
  // 9. 毛玻璃背景
  VStack { content }
      .glassBackground(cornerRadius: 16)
- 
+
  // 10. 自定义开关
  JetCustomSwitch(isOn: $isEnabled)
- 
+
  // 11. Lottie 动画
  JetLottieView(filename: "animation", loopMode: .loop)
- 
+
  // 12. 设置页面
  JetSettingsView(
      title: "Settings",
@@ -273,7 +275,7 @@ public enum JetUI {
          )
      ]
  )
- 
+
  // 13. 订阅模块
  // 配置
  let config = JetSubscriptionConfig(
@@ -283,10 +285,10 @@ public enum JetUI {
      appIdentifier: "MyApp"
  )
  JetUI.configureSubscription(config)
- 
+
  // 检查 Pro 状态
  let isPro = await JetSubscriptionManager.shared.isPro
- 
+
  // 显示 Paywall
  let viewModel = JetPaywallViewModel(config: config)
  JetPaywallView(
@@ -308,38 +310,38 @@ public enum JetUI {
      }
  )
  ```
- 
+
  核心组件说明：
- 
+
  ## CacheManager
  - 支持 TTL（过期时间）
  - 内存缓存 + 可选持久化（UserDefaults）
  - 自动清理过期条目
  - 线程安全
- 
+
  ## CircuitBreaker
  - 熔断器模式防止级联故障
  - 支持 closed/open/half-open 状态
  - 可配置失败阈值和恢复超时
- 
+
  ## MemoryMonitor
  - 实时内存使用量监控
  - 内存压力等级检测
  - 代码块性能分析（profile）
- 
+
  ## JetToastView & ToastManager
  - 支持 success/error/warning/info 四种类型
  - View 修饰器方式 + 全局单例方式
- 
+
  ## JetGlassBackground
  - 毛玻璃/玻璃拟态背景效果
  - 支持自定义圆角、模糊样式
- 
+
  ## JetSettingsView
  - 支持多种主题风格（dark/light/standard）
  - 支持多种行样式（darkCard/lightCard/standard）
  - 完全可配置的设置页面组件
- 
+
  ## UIImage+Jet
  - jet_cropped(to:) 按比例裁剪
  - jet_downsampled(from:maxPixel:) 降采样
@@ -347,7 +349,7 @@ public enum JetUI {
  - jet_resized(to:) 缩放
  - jet_fixedOrientation() 方向修正
  - jet_jpegData(targetKB:) 智能压缩
- 
+
  ## View+Jet
  - jet_backArrow() 统一返回按钮
  - jet_if() 条件修饰器
@@ -355,12 +357,12 @@ public enum JetUI {
  - jet_fillMaxSize() 填充布局
  - jet_border() 圆角边框
  - jet_cardShadow() 卡片阴影
- 
+
  ## JetSubscriptionManager
  - isPro 属性检查会员状态
  - refreshProStatus() 刷新状态
  - observeTransactions() 监听交易
- 
+
  ## JetPaywallView
  - 通用付费墙视图组件
  - 支持多种价格计划
@@ -368,7 +370,7 @@ public enum JetUI {
  - 免费试用 Badge
  - 扫光按钮动画
  - 可配置品牌、颜色、文案
- 
+
  ## JetStorageManager
  - uploadImage() 上传图片
  - downloadImage() 下载图片

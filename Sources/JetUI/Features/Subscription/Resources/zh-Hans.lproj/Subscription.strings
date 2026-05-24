@@ -70,6 +70,13 @@
 "subscription.error.no_products" = "暂无可用产品";
 "subscription.error.no_subscription_found" = "未找到有效订阅";
 "subscription.error.restore_failed" = "恢复购买失败";
+"subscription.error.purchase_recovery_title" = "购买未完成";
+"subscription.error.purchase_network_recovery" = "请检查网络后重试。如果你已经购买，也可以恢复购买。";
+"subscription.error.purchase_store_recovery" = "App Store 暂时不可用。请稍后重试，或恢复已购买项目。";
+"subscription.error.purchase_configuration_recovery" = "当前暂无可购买商品。请重试，或恢复已购买项目。";
+"subscription.error.purchase_generic_recovery" = "请重试。如果你已经解锁 Pro，也可以恢复购买。";
+"subscription.error.purchase_pending_title" = "购买处理中";
+"subscription.error.purchase_pending_recovery" = "Apple 仍在处理本次购买。稍后可重试，或完成后恢复购买。";
 
 // MARK: - Benefits (Common)
 "subscription.benefit.unlimited_access" = "无限访问";

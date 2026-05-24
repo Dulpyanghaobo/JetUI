@@ -70,6 +70,13 @@
 "subscription.error.no_products" = "No products available";
 "subscription.error.no_subscription_found" = "No active subscription found";
 "subscription.error.restore_failed" = "Failed to restore purchases";
+"subscription.error.purchase_recovery_title" = "We couldn't complete your purchase";
+"subscription.error.purchase_network_recovery" = "Check your connection and try again, or restore if you already purchased.";
+"subscription.error.purchase_store_recovery" = "The App Store is not available right now. Try again shortly, or restore if you already purchased.";
+"subscription.error.purchase_configuration_recovery" = "Products are not available right now. Try again, or restore if you already purchased.";
+"subscription.error.purchase_generic_recovery" = "Try again, or restore purchases if you have already unlocked Pro.";
+"subscription.error.purchase_pending_title" = "Purchase is pending";
+"subscription.error.purchase_pending_recovery" = "Apple is still processing this purchase. You can retry later or restore once it completes.";
 
 // MARK: - Benefits (Common)
 "subscription.benefit.unlimited_access" = "Unlimited Access";

@@ -92,15 +92,36 @@ public final class JetTransactionObserver {
                     productId: proTransaction.productID
                 )
                 JetEntitlementCacheManager.save(cache, accessGroup: accessGroup)
+                AnalyticsManager.logEntitlementRefresh(
+                    source: "transaction_observer",
+                    productId: proTransaction.productID,
+                    result: "success",
+                    reasonCategory: nil,
+                    entitlementActive: true
+                )
                 return true
             } else {
                 // 没有 Pro 订阅
                 JetEntitlementCacheManager.clear(accessGroup: accessGroup)
+                AnalyticsManager.logEntitlementRefresh(
+                    source: "transaction_observer",
+                    productId: nil,
+                    result: "not_entitled",
+                    reasonCategory: .notEntitled,
+                    entitlementActive: false
+                )
                 return false
             }
         } catch {
             CSLogger.error("Failed to refresh entitlement cache: \(error.localizedDescription)", category: .subscription)
             JetEntitlementCacheManager.clear(accessGroup: accessGroup)
+            AnalyticsManager.logEntitlementRefresh(
+                source: "transaction_observer",
+                productId: nil,
+                result: "failure",
+                reasonCategory: JetPaywallFailureCategory.category(for: error),
+                entitlementActive: false
+            )
             return false
         }
     }
@@ -115,6 +136,13 @@ public final class JetTransactionObserver {
             productId: transaction.productID
         )
         JetEntitlementCacheManager.save(cache, accessGroup: accessGroup)
+        AnalyticsManager.logEntitlementRefresh(
+            source: "transaction_update",
+            productId: transaction.productID,
+            result: isPro ? "success" : "not_pro_product",
+            reasonCategory: isPro ? nil : .notEntitled,
+            entitlementActive: isPro
+        )
     }
 }
 

@@ -8,31 +8,31 @@ import StoreKit
 
 /// 试用版 Paywall 视图 - 展示免费试用流程和价格选项
 public struct JetTrialPaywallView: View {
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     private var externalViewModel: JetPaywallViewModel?
     @StateObject private var internalViewModel = JetPaywallViewModel()
-    
+
     private var vm: JetPaywallViewModel {
         externalViewModel ?? internalViewModel
     }
-    
+
     @State private var didLogView = false
     @State private var restoreTapPending = false
     @State private var autoSelectedLogged = false // 新增：追踪是否已执行自动选中
     @State private var isShimmering = false
-    
+
     private let config: JetTrialPaywallConfig
     private let onSuccess: () -> Void
     private let onDismiss: (() -> Void)?
-    
+
     private var isYearlySelected: Bool {
         guard let id = vm.selectedProductID,
               let plan = vm.plans.first(where: { $0.id == id }) else { return false }
         return plan.isYearly
     }
-    
+
     public init(
         viewModel: JetPaywallViewModel? = nil,
         config: JetTrialPaywallConfig,
@@ -44,7 +44,7 @@ public struct JetTrialPaywallView: View {
         self.onSuccess = onSuccess
         self.onDismiss = onDismiss
     }
-    
+
     public init(
         viewModel: JetPaywallViewModel? = nil,
         content: JetPaywallContent,
@@ -56,11 +56,11 @@ public struct JetTrialPaywallView: View {
         self.onSuccess = onSuccess
         self.onDismiss = onDismiss
     }
-    
+
     // 补齐：默认选中 Yearly 的交互逻辑
     private func selectYearlyByDefault() {
         guard vm.selectedProductID == nil else { return }
-        
+
         if let yearly = vm.plans.first(where: { $0.isYearly }) {
             vm.selectedProductID = yearly.id
             if !autoSelectedLogged {
@@ -75,7 +75,7 @@ public struct JetTrialPaywallView: View {
             }
         }
     }
-    
+
     public var body: some View {
         ZStack(alignment: .top) {
             Rectangle()
@@ -88,22 +88,26 @@ public struct JetTrialPaywallView: View {
                 )
                 .frame(height: 400)
                 .edgesIgnoringSafeArea(.top)
-            
+
             VStack(spacing: 24) {
                 header
-                
+
                 Text(isYearlySelected ? config.trialTitle : config.lifetimeTitle)
                     .font(.title2.bold())
                     .foregroundColor(.white)
-                
+
                 topContent
                     .padding(.bottom, 16)
-                
+
                 priceOptions
                     .padding(.top, 8)
-                
+
+                if let recovery = vm.recoveryState {
+                    recoveryStateView(recovery)
+                }
+
                 Spacer(minLength: 8)
-                
+
                 VStack(spacing: 0) {
                     // 补齐：固定高度以防止切换时 UI 跳动
                     Group {
@@ -120,9 +124,9 @@ public struct JetTrialPaywallView: View {
                         }
                     }
                     .frame(height: 32, alignment: .center)
-                    
+
                     continueButton
-                    
+
                     legalLinks
                         .padding(.top, 4)
                 }
@@ -159,7 +163,7 @@ public struct JetTrialPaywallView: View {
 // MARK: - Subviews
 
 private extension JetTrialPaywallView {
-    
+
     var header: some View {
         HStack {
             Button(action: {
@@ -175,9 +179,9 @@ private extension JetTrialPaywallView {
                     .padding(10)
             }
             .contentShape(Rectangle())
-            
+
             Spacer()
-            
+
             Button(config.restoreButtonTitle) {
                 AnalyticsManager.logEvent(JetPaywallEvent.action, parameters: ["action": "restore_tap"])
                 restoreTapPending = true
@@ -190,7 +194,7 @@ private extension JetTrialPaywallView {
         }
         .foregroundColor(.white)
     }
-    
+
     @ViewBuilder
     var topContent: some View {
         if isYearlySelected {
@@ -223,7 +227,7 @@ private extension JetTrialPaywallView {
             .frame(height: 250, alignment: .top)
         }
     }
-    
+
     var priceOptions: some View {
         VStack(spacing: 12) {
             ForEach(vm.plans) { plan in
@@ -245,7 +249,50 @@ private extension JetTrialPaywallView {
             }
         }
     }
-    
+
+    func recoveryStateView(_ recovery: JetPaywallRecoveryState) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(recovery.title)
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text(recovery.message)
+                .font(.footnote)
+                .foregroundColor(.white.opacity(0.72))
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 10) {
+                Button(recovery.retryTitle) {
+                    Task { await vm.purchaseSelected() }
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(config.accentColor)
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                Button(recovery.restoreTitle) {
+                    restoreTapPending = true
+                    Task { await vm.restore() }
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Color.white.opacity(0.14))
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+        }
+        .padding(14)
+        .background(Color.white.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.white.opacity(0.14), lineWidth: 1)
+        )
+    }
+
     @ViewBuilder
     var renewalHint: some View {
         if let hint = vm.nextRenewalHint {
@@ -260,11 +307,11 @@ private extension JetTrialPaywallView {
                 .foregroundColor(.clear)
         }
     }
-    
+
     var continueButton: some View {
         let isBusy = vm.isLoading || vm.restoreInProgress || (vm.purchaseInProgress != nil)
         let sel = vm.plans.first(where: { $0.id == vm.selectedProductID })
-        
+
         return Button {
             AnalyticsManager.logEvent(JetPaywallEvent.action, parameters: [
                 "action": "continue_tap",
@@ -281,7 +328,7 @@ private extension JetTrialPaywallView {
                 }
                 return config.continueButtonTitle
             }()
-            
+
             Text(title)
                 .font(.headline)
                 .foregroundColor(.white)
@@ -291,7 +338,7 @@ private extension JetTrialPaywallView {
                     ZStack {
                         RoundedRectangle(cornerRadius: 28)
                             .fill(config.accentColor)
-                        
+
                         if !isBusy && vm.selectedProductID != nil {
                             shimmerEffect
                         }
@@ -302,7 +349,7 @@ private extension JetTrialPaywallView {
         .disabled(isBusy || vm.selectedProductID == nil)
         .opacity(isBusy || vm.selectedProductID == nil ? 0.6 : 1)
     }
-    
+
     var shimmerEffect: some View {
         GeometryReader { geo in
             Rectangle()
@@ -335,12 +382,12 @@ private extension JetTrialPaywallView {
         .mask(RoundedRectangle(cornerRadius: 28))
         .allowsHitTesting(false)
     }
-    
+
     var legalLinks: some View {
         let selected = vm.plans.first(where: { $0.id == vm.selectedProductID })
         let isLifetime = selected?.product.type == .nonConsumable
         let tip = isLifetime ? config.lifetimeTip : config.autoRenewalTip
-        
+
         return VStack(spacing: 4) {
             Text(tip)
                 .font(.caption)
@@ -360,18 +407,18 @@ private extension JetTrialPaywallView {
         .padding(.top, 8)
         .padding(.bottom, 10)
     }
-    
+
     // MARK: - Helper Methods
-    
+
     func calculateSaveTag(for plan: JetPlanDisplay) -> String? {
         guard plan.isYearly else { return nil }
-        
+
         if let percent = vm.calculateSavePercentage(for: plan), percent > 0 {
             return String(format: config.savePercentFormat, percent)
         }
         return nil
     }
-    
+
     func logSuccessEvent() {
         let sel = vm.plans.first(where: { $0.id == vm.selectedProductID })
         let action = restoreTapPending ? "restore_success" : "purchase_success"
@@ -393,7 +440,7 @@ private struct TimelineStepRow: View {
     let accentColor: Color
     var isFirst: Bool = false
     var isLast: Bool = false
-    
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             TimelineColumn(
@@ -402,7 +449,7 @@ private struct TimelineStepRow: View {
                 isFirst: isFirst,
                 isLast: isLast
             )
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.body.weight(.medium))
@@ -428,7 +475,7 @@ private struct TimelineColumn: View {
     let accentColor: Color
     var isFirst: Bool
     var isLast: Bool
-    
+
     var body: some View {
         ZStack(alignment: .center) {
             VStack(spacing: 0) {
@@ -440,9 +487,9 @@ private struct TimelineColumn: View {
                 } else {
                     Spacer(minLength: 0)
                 }
-                
+
                 Spacer().frame(height: 36)
-                
+
                 if !isLast {
                     Rectangle()
                         .fill(isFirst ? accentColor : .white.opacity(0.18))
@@ -452,7 +499,7 @@ private struct TimelineColumn: View {
                     Spacer(minLength: 0)
                 }
             }
-            
+
             Image(iconName)
                 .resizable()
                 .scaledToFit()
@@ -468,18 +515,18 @@ private struct TimelineColumn: View {
 private struct BenefitRow: View {
     let iconName: String
     let title: String
-    
+
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             Image(iconName)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 40, height: 40)
-            
+
             Text(title)
                 .font(.body.weight(.medium))
                 .foregroundColor(.white)
-            
+
             Spacer()
         }
         .frame(minHeight: 44)
@@ -490,67 +537,67 @@ private struct BenefitRow: View {
 
 /// 试用 Paywall 配置
 public struct JetTrialPaywallConfig {
-    
+
     // MARK: - Colors
-    
+
     public let backgroundColor: Color
     public let accentColor: Color
-    
+
     // MARK: - Titles
-    
+
     public let trialTitle: String
     public let lifetimeTitle: String
     public let restoreButtonTitle: String
     public let continueButtonTitle: String
     public let processingTitle: String
-    
+
     // MARK: - Tips
-    
+
     public let autoRenewalTip: String
     public let lifetimeTip: String
     public let savePercentFormat: String
-    
+
     // MARK: - Legal
-    
+
     public let privacyPolicyURL: URL
     public let privacyPolicyTitle: String
     public let termsURL: URL
     public let termsTitle: String
-    
+
     // MARK: - Trial Steps
-    
+
     public let trialSteps: [TrialStep]
-    
+
     // MARK: - Benefits
-    
+
     public let benefits: [Benefit]
-    
+
     // MARK: - Types
-    
+
     public struct TrialStep {
         public let iconName: String
         public let title: String
         public let message: String?
-        
+
         public init(iconName: String, title: String, message: String? = nil) {
             self.iconName = iconName
             self.title = title
             self.message = message
         }
     }
-    
+
     public struct Benefit: Hashable {
         public let iconName: String
         public let title: String
-        
+
         public init(iconName: String, title: String) {
             self.iconName = iconName
             self.title = title
         }
     }
-    
+
     // MARK: - Initializer
-    
+
     public init(
         backgroundColor: Color = Color(red: 0.2, green: 0.1, blue: 0.3),
         accentColor: Color = .orange,
@@ -586,9 +633,9 @@ public struct JetTrialPaywallConfig {
         self.trialSteps = trialSteps
         self.benefits = benefits
     }
-    
+
     // MARK: - Conversion from JetPaywallContent
-    
+
     /// 从 JetPaywallContent 创建配置
     /// - Parameter content: 统一的内容容器
     /// - Returns: JetTrialPaywallConfig 实例
@@ -607,12 +654,12 @@ public struct JetTrialPaywallConfig {
         self.privacyPolicyTitle = content.privacyText
         self.termsURL = content.termsURL ?? URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
         self.termsTitle = content.termsText
-        
+
         // 转换 Timeline Steps
         self.trialSteps = content.timelineSteps.map { step in
             TrialStep(iconName: step.icon, title: step.title, message: step.subtitle)
         }
-        
+
         // 转换 Benefits
         self.benefits = content.complexBenefits.map { benefit in
             Benefit(iconName: benefit.icon, title: benefit.title)

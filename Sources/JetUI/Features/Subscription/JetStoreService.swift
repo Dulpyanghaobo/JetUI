@@ -14,16 +14,16 @@ import StoreKit
 public protocol JetStoreServiceProtocol {
     /// 获取所有可用产品
     func fetchProducts() async throws -> [Product]
-    
+
     /// 购买产品
     func purchase(_ product: Product) async throws -> (Transaction, String)
-    
+
     /// 恢复购买
     func restorePurchases() async throws
-    
+
     /// 获取当前权益
     func currentEntitlements() async throws -> [Transaction]
-    
+
     /// 检查是否有 Pro 权益
     func isEntitledToPro() async -> Bool
 }
@@ -37,7 +37,7 @@ public enum JetStoreError: Error, LocalizedError {
     case unknown
     case noProducts
     case purchaseFailed(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .cancelled: return SubL.Error.purchaseCancelled
@@ -53,10 +53,10 @@ public enum JetStoreError: Error, LocalizedError {
 
 /// StoreKit 2 商店服务实现
 public final class JetStoreService: JetStoreServiceProtocol {
-    
+
     private let signer: JetPromotionalOfferSigner?
     private let accountService: AccountServiceProtocol
-    
+
     public init(
         signer: JetPromotionalOfferSigner? = nil,
         accountService: AccountServiceProtocol? = nil
@@ -64,21 +64,21 @@ public final class JetStoreService: JetStoreServiceProtocol {
         self.signer = signer
         self.accountService = accountService ?? DefaultAccountService.shared
     }
-    
+
     // MARK: - JetStoreServiceProtocol
-    
+
     public func fetchProducts() async throws -> [Product] {
         guard let config = JetUI.subscriptionConfig else { return [] }
-        
+
         guard !config.productIds.isEmpty else {
             throw JetStoreError.noProducts
         }
         return try await Product.products(for: config.productIds)
     }
-    
+
     public func purchase(_ product: Product) async throws -> (Transaction, String) {
         let purchaseResult: Product.PurchaseResult
-        
+
         // 检查是否有促销优惠
         if let offer = product.subscription?.promotionalOffers.first,
            let option = try? await signer?.purchaseOption(for: product, offer: offer) {
@@ -86,31 +86,32 @@ public final class JetStoreService: JetStoreServiceProtocol {
         } else {
             purchaseResult = try await product.purchase()
         }
-        
+
         switch purchaseResult {
         case .success(let verification):
             let jws = verification.jwsRepresentation
             let transaction = try verification.payloadValue
             await transaction.finish()
-            
+            updateEntitlementCacheIfNeeded(from: transaction, source: "purchase")
+
             // 自动绑定到后端
             try await bindToBackend(jws: jws)
-            
+
             return (transaction, jws)
-            
+
         case .userCancelled:
             throw JetStoreError.cancelled
-            
+
         case .pending:
             throw JetStoreError.pending
-            
+
         @unknown default:
             throw JetStoreError.unknown
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     /// 绑定订阅到后端
     private func bindToBackend(jws: String) async throws {
         do {
@@ -125,11 +126,12 @@ public final class JetStoreService: JetStoreServiceProtocol {
             // 不抛出错误，因为 StoreKit 购买已成功，后端绑定失败可以稍后重试
         }
     }
-    
+
     public func restorePurchases() async throws {
         try await AppStore.sync()
+        await refreshEntitlementCache(source: "restore")
     }
-    
+
     public func currentEntitlements() async throws -> [Transaction] {
         var result = [Transaction]()
         for await verification in Transaction.currentEntitlements {
@@ -140,13 +142,124 @@ public final class JetStoreService: JetStoreServiceProtocol {
         }
         return result
     }
-    
-    public func isEntitledToPro() async -> Bool {
-        let entitlements = try? await currentEntitlements()
-        
-        guard let config = JetUI.subscriptionConfig else { return false }
 
-        return entitlements?.contains(where: { config.proProductIds.contains($0.productID) }) ?? false
+    public func isEntitledToPro() async -> Bool {
+        guard let config = JetUI.subscriptionConfig else {
+            AnalyticsManager.logEntitlementRefresh(
+                source: "status_check",
+                productId: nil,
+                result: "failure",
+                reasonCategory: .configuration,
+                entitlementActive: false
+            )
+            return false
+        }
+
+        if let cached = JetEntitlementCacheManager.load(), cached.isValid {
+            AnalyticsManager.logEntitlementRefresh(
+                source: "status_check_cache",
+                productId: cached.productId,
+                result: "success",
+                reasonCategory: nil,
+                entitlementActive: true
+            )
+            return true
+        }
+
+        let entitlements: [Transaction]
+        do {
+            entitlements = try await currentEntitlements()
+        } catch {
+            AnalyticsManager.logEntitlementRefresh(
+                source: "status_check",
+                productId: nil,
+                result: "failure",
+                reasonCategory: JetPaywallFailureCategory.category(for: error),
+                entitlementActive: false
+            )
+            return false
+        }
+
+        if let transaction = entitlements.first(where: { config.proProductIds.contains($0.productID) }) {
+            updateEntitlementCacheIfNeeded(from: transaction, source: "status_check")
+            return true
+        }
+
+        JetEntitlementCacheManager.clear()
+        AnalyticsManager.logEntitlementRefresh(
+            source: "status_check",
+            productId: nil,
+            result: "not_entitled",
+            reasonCategory: .notEntitled,
+            entitlementActive: false
+        )
+        return false
+    }
+
+    private func refreshEntitlementCache(source: String) async {
+        guard let config = JetUI.subscriptionConfig else {
+            AnalyticsManager.logEntitlementRefresh(
+                source: source,
+                productId: nil,
+                result: "failure",
+                reasonCategory: .configuration,
+                entitlementActive: false
+            )
+            return
+        }
+
+        do {
+            let entitlements = try await currentEntitlements()
+            if let transaction = entitlements.first(where: { config.proProductIds.contains($0.productID) }) {
+                updateEntitlementCacheIfNeeded(from: transaction, source: source)
+            } else {
+                JetEntitlementCacheManager.clear()
+                AnalyticsManager.logEntitlementRefresh(
+                    source: source,
+                    productId: nil,
+                    result: "not_entitled",
+                    reasonCategory: .notEntitled,
+                    entitlementActive: false
+                )
+            }
+        } catch {
+            AnalyticsManager.logEntitlementRefresh(
+                source: source,
+                productId: nil,
+                result: "failure",
+                reasonCategory: JetPaywallFailureCategory.category(for: error),
+                entitlementActive: false
+            )
+        }
+    }
+
+    private func updateEntitlementCacheIfNeeded(from transaction: Transaction, source: String) {
+        guard let config = JetUI.subscriptionConfig,
+              config.proProductIds.contains(transaction.productID),
+              transaction.revocationDate == nil else {
+            return
+        }
+
+        let cache = JetEntitlementCache(
+            isPro: true,
+            expiration: transaction.expirationDate,
+            productId: transaction.productID
+        )
+        JetEntitlementCacheManager.save(cache)
+        AnalyticsManager.logEntitlementRefresh(
+            source: source,
+            productId: transaction.productID,
+            result: "success",
+            reasonCategory: nil,
+            entitlementActive: true
+        )
+
+        Task { @MainActor in
+            NotificationCenter.default.post(
+                name: JetTransactionObserver.entitlementChangedNotification,
+                object: nil
+            )
+        }
     }
 }
 
