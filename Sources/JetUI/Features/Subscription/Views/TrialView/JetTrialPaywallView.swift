@@ -5,6 +5,11 @@
 
 import SwiftUI
 import StoreKit
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 /// 试用版 Paywall 视图 - 展示免费试用流程和价格选项
 public struct JetTrialPaywallView: View {
@@ -500,11 +505,7 @@ private struct TimelineColumn: View {
                 }
             }
 
-            Image(iconName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 36, height: 36)
-                .foregroundColor(accentColor)
+            PaywallIconImage(name: iconName, size: 36, foregroundColor: accentColor)
         }
         .frame(width: 36)
     }
@@ -518,10 +519,7 @@ private struct BenefitRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            Image(iconName)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 40, height: 40)
+            PaywallIconImage(name: iconName, size: 40, foregroundColor: .white)
 
             Text(title)
                 .font(.body.weight(.medium))
@@ -530,6 +528,33 @@ private struct BenefitRow: View {
             Spacer()
         }
         .frame(minHeight: 44)
+    }
+}
+
+private struct PaywallIconImage: View {
+    let name: String
+    let size: CGFloat
+    let foregroundColor: Color
+
+    var body: some View {
+        image
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .foregroundColor(foregroundColor)
+    }
+
+    private var image: Image {
+#if canImport(UIKit)
+        if UIImage(named: name) != nil {
+            return Image(name)
+        }
+#elseif canImport(AppKit)
+        if NSImage(named: NSImage.Name(name)) != nil {
+            return Image(name)
+        }
+#endif
+        return Image(systemName: name)
     }
 }
 
