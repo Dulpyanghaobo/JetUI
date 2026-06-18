@@ -4,10 +4,11 @@
 //
 //  JetUI 是一个 iOS UI 组件库，提供：
 //  - 主题系统（AppFont, AppColor）
-//  - 核心工具（Logger, Cache, Resilience, Utilities）
-//  - 网络层（NetworkCore, Auth, Account）
-//  - 认证管理（AuthManager）
-//  - Firebase 服务（Analytics, Storage）
+//  - 核心工具（Logger, Cache, Diagnostics, Utilities）
+//  - 网络层（NetworkCore, Network/Resilience/CircuitBreaker）
+//  - 认证管理（Auth/Core: AuthManager + Auth/Network: AuthTarget/AuthSession）
+//  - Analytics 抽象层（JetAnalytics protocol + FirebaseAnalyticsAdapter）
+//  - Storage 抽象层（JetCloudStorage protocol + JetStorageManager/Firebase）
 //  - UI 组件（Toast, Alert, Glass, Switch, Lottie, Image）
 //  - 系统扩展（UIImage+Jet, View+Jet）
 //  - 功能模块（Settings, Subscription, Onboarding, Feedback*）
@@ -74,9 +75,10 @@ public enum JetUI {
         )
     }
 
-    /// 配置分析系统
+    /// 配置分析系统，并注册 Firebase adapter
     /// - Parameter enabled: 是否启用分析
     public static func configureAnalytics(enabled: Bool = true) {
+        JetAnalytics.shared.register(FirebaseAnalyticsAdapter())
         AnalyticsManager.isEnabled = enabled
     }
 
@@ -111,20 +113,50 @@ public enum JetUI {
 // MARK: - Module Documentation
 
 /*
- JetUI 模块结构 (v2.0)：
+ JetUI 模块结构 (v3.0)：
 
  📁 Core/                          # 核心基础设施层
     📁 Logger/
        - CSLogger.swift            : 统一日志系统
     📁 Cache/
        - CacheManager.swift        : 通用缓存管理（支持 TTL、内存+持久化）
-    📁 Resilience/
-       - CircuitBreaker.swift      : 熔断器模式（防止级联故障）
-       - MemoryMonitor.swift       : 内存监控工具
+    📁 Diagnostics/                # （原 Resilience/）
+       - MemoryMonitor.swift       : 内存监控与压力检测
     📁 Utilities/
        - JetDateFormatter.swift    : 日期格式化工具
        - StateHelpers.swift        : SwiftUI 状态更新辅助函数
        - JetAssetSaver.swift       : 图片资源保存工具
+
+ 📁 Network/                       # 网络层
+    📁 Core/
+       - NetworkCore.swift         : Moya 网络核心
+       - NetworkError.swift        : 错误类型
+       - APIResponse.swift         : 响应模型
+    📁 Resilience/                 # （从 Core/ 移来）
+       - CircuitBreaker.swift      : 熔断器模式（防止级联故障）
+    📁 Account/
+       - AccountTarget.swift       : 账户/订阅 API 端点
+       - AccountService.swift      : 账户/订阅 Service 层
+
+ 📁 Auth/                          # 统一认证模块（原 Auth/ + Network/Auth/ 合并）
+    📁 Core/
+       - AuthManager.swift         : 登录态、Keychain、Apple Sign-In、ECDSA 签名
+       - AuthSession.swift         : Token 注入到 NetworkCore
+    📁 Network/
+       - AuthTarget.swift          : 登录/刷新 API 端点（Moya TargetType）
+       - AuthModels.swift          : 登录请求数据模型
+       - LoginResult.swift         : 登录结果 + UserInfo + Entitlement 模型
+
+ 📁 Analytics/                     # Analytics 抽象层（不绑定具体 SDK）
+    - JetAnalyticsProtocol.swift   : JetAnalyticsProvider 协议 + JetAnalytics 注册中心
+    - AnalyticsManager.swift       : 高层便利 API（logEvent, logScreen, logPurchase…）
+    📁 Firebase/
+       - FirebaseAnalyticsAdapter.swift : Firebase Analytics 具体实现（可替换）
+
+ 📁 Storage/                       # Storage 抽象层
+    - JetCloudStorageProtocol.swift: JetCloudStorageProvider 协议 + JetCloudStorage 注册中心
+    📁 Firebase/
+       - JetStorageManager.swift   : Firebase Storage 具体实现（可替换）
 
  📁 Extensions/                    # 系统类型扩展
     - UIImage+Jet.swift            : UIImage 扩展（裁剪、缩放、着色）
@@ -149,29 +181,6 @@ public enum JetUI {
     📁 Image/
        - JetCacheAsyncImage.swift  : 带缓存的异步图片组件
 
- 📁 Network/                       # 网络层
-    📁 Core/
-       - NetworkCore.swift         : Moya 网络核心
-       - NetworkError.swift        : 错误类型
-       - APIResponse.swift         : 响应模型
-    📁 Auth/
-       - AuthTarget.swift          : 认证 API 端点
-       - AuthSession.swift         : Token 管理
-       - AuthModels.swift          : 认证数据模型
-    📁 Account/
-       - AccountTarget.swift       : 账户/订阅 API 端点
-       - AccountService.swift      : 账户/订阅 Service 层
-       - LoginResult.swift         : 登录结果模型
-
- 📁 Auth/                          # 认证管理
-    - AuthManager.swift            : 统一认证管理器
-
- 📁 Firebase/                      # Firebase 服务层
-    📁 Analytics/
-       - AnalyticsManager.swift    : 分析系统（Firebase Analytics）
-    📁 Storage/
-       - JetStorageManager.swift   : Firebase Storage 统一管理器
-
  📁 Features/                      # 功能模块
     📁 Settings/                   # 设置模块
        - JetSettingsView.swift     : 可配置样式的设置页面
@@ -183,7 +192,6 @@ public enum JetUI {
        - JetRecommendationsView.swift: 推荐应用组件
        - JetSettingItemRow.swift   : 设置项行组件
        - JetAppConfig.swift        : App 配置
-       - README.md                 : 使用文档
     📁 Subscription/               # 订阅模块
        - JetSubscriptionConfig.swift: 订阅配置（产品 ID、验证端点）
        - JetSubscriptionManager.swift: 订阅管理器（Pro 状态）

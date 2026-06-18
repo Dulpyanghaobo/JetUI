@@ -2,11 +2,12 @@
 //  AnalyticsManager.swift
 //  JetUI
 //
-//  分析管理器 - 直接集成 Firebase Analytics
+//  High-level analytics helper.  All calls are forwarded through JetAnalytics.shared,
+//  which delegates to the registered JetAnalyticsProvider (e.g. FirebaseAnalyticsAdapter).
+//  No direct dependency on any analytics SDK here.
 //
 
 import Foundation
-import FirebaseAnalytics
 
 // MARK: - Paywall Event Names
 
@@ -75,7 +76,7 @@ public enum AnalyticsManager {
     /// 记录事件
     public static func logEvent(_ name: String, parameters: [String: Any]? = nil) {
         guard isEnabled else { return }
-        Analytics.logEvent(name, parameters: ctx.merged(parameters))
+        JetAnalytics.shared.logEvent(name, parameters: ctx.merged(parameters))
     }
 
     /// 采样记录事件
@@ -87,27 +88,24 @@ public enum AnalyticsManager {
     /// 记录屏幕浏览
     public static func logScreen(_ screen: String) {
         guard isEnabled else { return }
-        Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-            AnalyticsParameterScreenName: screen,
-            AnalyticsParameterScreenClass: "SwiftUI"
-        ])
+        JetAnalytics.shared.logScreen(screen)
     }
 
     /// 设置用户属性
     public static func setUserProperty(_ value: String?, forName name: String) {
         guard isEnabled else { return }
-        Analytics.setUserProperty(value, forName: name)
+        JetAnalytics.shared.setUserProperty(value, forName: name)
     }
 
     /// 设置用户 ID
     public static func setUserID(_ userID: String?) {
         guard isEnabled else { return }
-        Analytics.setUserID(userID)
+        JetAnalytics.shared.setUserID(userID)
     }
 
     /// 设置分析收集状态
     public static func setAnalyticsCollectionEnabled(_ enabled: Bool) {
-        Analytics.setAnalyticsCollectionEnabled(enabled)
+        JetAnalytics.shared.setCollectionEnabled(enabled)
         isEnabled = enabled
     }
 
@@ -422,59 +420,53 @@ public enum AnalyticsManager {
         ])
     }
 
-    // MARK: - Firebase Standard Events
+    // MARK: - Standard Events
 
     /// 记录登录事件
     public static func logLogin(method: String) {
-        logEvent(AnalyticsEventLogin, parameters: [
-            AnalyticsParameterMethod: method
-        ])
+        logEvent("login", parameters: ["method": method])
     }
 
     /// 记录注册事件
     public static func logSignUp(method: String) {
-        logEvent(AnalyticsEventSignUp, parameters: [
-            AnalyticsParameterMethod: method
-        ])
+        logEvent("sign_up", parameters: ["method": method])
     }
 
     /// 记录搜索事件
     public static func logSearch(searchTerm: String) {
-        logEvent(AnalyticsEventSearch, parameters: [
-            AnalyticsParameterSearchTerm: searchTerm
-        ])
+        logEvent("search", parameters: ["search_term": searchTerm])
     }
 
     /// 记录分享事件
     public static func logShare(contentType: String, itemId: String, method: String) {
-        logEvent(AnalyticsEventShare, parameters: [
-            AnalyticsParameterContentType: contentType,
-            AnalyticsParameterItemID: itemId,
-            AnalyticsParameterMethod: method
+        logEvent("share", parameters: [
+            "content_type": contentType,
+            "item_id": itemId,
+            "method": method
         ])
     }
 
     /// 记录选择内容事件
     public static func logSelectContent(contentType: String, itemId: String) {
-        logEvent(AnalyticsEventSelectContent, parameters: [
-            AnalyticsParameterContentType: contentType,
-            AnalyticsParameterItemID: itemId
+        logEvent("select_content", parameters: [
+            "content_type": contentType,
+            "item_id": itemId
         ])
     }
 
     /// 记录教程开始
     public static func logTutorialBegin() {
-        logEvent(AnalyticsEventTutorialBegin)
+        logEvent("tutorial_begin")
     }
 
     /// 记录教程完成
     public static func logTutorialComplete() {
-        logEvent(AnalyticsEventTutorialComplete)
+        logEvent("tutorial_complete")
     }
 
     /// 记录应用打开
     public static func logAppOpen() {
-        logEvent(AnalyticsEventAppOpen)
+        logEvent("app_open")
     }
 
     // MARK: - App Specific Events

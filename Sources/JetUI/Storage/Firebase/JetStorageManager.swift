@@ -2,16 +2,19 @@
 //  JetStorageManager.swift
 //  JetUI
 //
-//  Firebase Storage Manager for uploading and downloading images
+//  Firebase-backed JetCloudStorageProvider.
+//  Register at startup:
+//  ```swift
+//  JetCloudStorage.shared.register(JetStorageManager.shared)
+//  ```
 //
 
 import Foundation
 import UIKit
 import FirebaseStorage
 
-/// Firebase Storage 管理器
-/// 提供图片上传、下载和列表功能
-public final class JetStorageManager {
+/// Firebase Storage adapter conforming to JetCloudStorageProvider.
+public final class JetStorageManager: JetCloudStorageProvider {
     
     // MARK: - Singleton
     
