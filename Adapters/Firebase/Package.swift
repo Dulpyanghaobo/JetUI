@@ -25,6 +25,12 @@ let package = Package(
                 .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
                 .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
             ]
+        ),
+        .testTarget(
+            name: "JetUIFirebaseAdaptersTests",
+            dependencies: [
+                "JetUIFirebaseAdapters"
+            ]
         )
     ]
 )
