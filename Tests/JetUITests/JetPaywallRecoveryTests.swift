@@ -1,13 +1,14 @@
 import XCTest
+import StoreKit
 @testable import JetUI
 
 final class JetPaywallRecoveryTests: XCTestCase {
-    func testNetworkPurchaseFailureBuildsRecoverableRetryRestoreState() {
+    func testNetworkPurchaseFailureBuildsRecoverableRetryRestoreState() throws {
         let category = JetPaywallFailureCategory.category(for: URLError(.notConnectedToInternet))
         XCTAssertEqual(category, .network)
         XCTAssertTrue(category.isRecoverable)
 
-        let recovery = JetPaywallRecoveryState(error: URLError(.notConnectedToInternet))
+        let recovery = try XCTUnwrap(JetPaywallRecoveryState(error: URLError(.notConnectedToInternet)))
         XCTAssertEqual(recovery.reasonCategory, "network")
         XCTAssertFalse(recovery.title.isEmpty)
         XCTAssertFalse(recovery.message.isEmpty)
@@ -22,12 +23,12 @@ final class JetPaywallRecoveryTests: XCTestCase {
         XCTAssertNil(JetPaywallRecoveryState(error: JetStoreError.cancelled))
     }
 
-    func testStoreKitUnavailableProductBuildsRecoverableStoreState() {
+    func testStoreKitUnavailableProductBuildsRecoverableStoreState() throws {
         let category = JetPaywallFailureCategory.category(for: SKError(.storeProductNotAvailable))
         XCTAssertEqual(category, .storeUnavailable)
         XCTAssertTrue(category.isRecoverable)
 
-        let recovery = JetPaywallRecoveryState(error: SKError(.storeProductNotAvailable))
+        let recovery = try XCTUnwrap(JetPaywallRecoveryState(error: SKError(.storeProductNotAvailable)))
         XCTAssertEqual(recovery.reasonCategory, "store_unavailable")
         XCTAssertFalse(recovery.message.isEmpty)
     }

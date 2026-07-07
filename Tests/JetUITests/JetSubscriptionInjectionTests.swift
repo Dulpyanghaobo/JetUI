@@ -30,7 +30,8 @@ final class JetSubscriptionInjectionTests: XCTestCase {
         let products = try await service.fetchProducts()
 
         XCTAssertTrue(products.isEmpty)
-        XCTAssertEqual(await catalog.requestedProductIds, explicitConfig.productIds)
+        let requestedProductIds = await catalog.requestedProductIdsSnapshot()
+        XCTAssertEqual(requestedProductIds, explicitConfig.productIds)
     }
 
     @MainActor
@@ -50,8 +51,9 @@ final class JetSubscriptionInjectionTests: XCTestCase {
 
         await runtime.manager.load()
 
-        XCTAssertEqual(await storeService.fetchProductsCallCount, 1)
-        XCTAssertEqual(await storeService.isEntitledToProCallCount, 1)
+        let callCounts = await storeService.callCounts()
+        XCTAssertEqual(callCounts.fetchProducts, 1)
+        XCTAssertEqual(callCounts.isEntitledToPro, 1)
     }
 }
 
@@ -61,6 +63,10 @@ private actor CapturingProductCatalog: JetProductCatalog {
     func products(for ids: [String]) async throws -> [Product] {
         requestedProductIds = ids
         return []
+    }
+
+    func requestedProductIdsSnapshot() -> [String]? {
+        requestedProductIds
     }
 }
 
@@ -86,5 +92,9 @@ private actor SpyStoreService: JetStoreServiceProtocol {
     func isEntitledToPro() async -> Bool {
         isEntitledToProCallCount += 1
         return true
+    }
+
+    func callCounts() -> (fetchProducts: Int, isEntitledToPro: Int) {
+        (fetchProductsCallCount, isEntitledToProCallCount)
     }
 }

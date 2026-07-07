@@ -5,11 +5,11 @@
 //  JetUI 是一个 iOS UI 组件库，提供：
 //  - 主题系统（AppFont, AppColor）
 //  - 核心工具（Logger, Cache, Diagnostics, Utilities）
-//  - 网络层（NetworkCore, Network/Resilience/CircuitBreaker）
-//  - 认证管理（Auth/Core: AuthManager + Auth/Network: AuthTarget/AuthSession）
-//  - Analytics 抽象层（JetAnalytics protocol + FirebaseAnalyticsAdapter）
-//  - Storage 抽象层（JetCloudStorage protocol + JetStorageManager/Firebase）
-//  - UI 组件（Toast, Alert, Glass, Switch, Lottie, Image）
+//  - 核心韧性工具（Network/Resilience/CircuitBreaker 已下沉到 Core）
+//  - 可选网络认证适配器（Adapters/NetworkAuth）
+//  - Analytics 抽象层（JetAnalytics protocol + 可选 adapter package）
+//  - Storage 抽象层（JetCloudStorage protocol + 可选 adapter package）
+//  - UI 组件（Toast, Alert, Glass, Switch, Image；Lottie 位于可选 adapter package）
 //  - 系统扩展（UIImage+Jet, View+Jet）
 //  - 功能模块（Settings, Subscription, Onboarding, Feedback*）
 //
@@ -18,6 +18,12 @@
 
 import Foundation
 import SwiftUI
+@_exported import JetUIAnalytics
+@_exported import JetUICore
+@_exported import JetUIDesign
+@_exported import JetUIComponents
+@_exported import JetUISettings
+@_exported import JetUISubscription
 
 // MARK: - Version
 
@@ -29,7 +35,7 @@ public enum JetUI {
 
     /// Current theme configuration
     /// Defaults to `DefaultTheme` if no custom theme is configured
-    public private(set) static var theme: JetThemeConfig = DefaultTheme()
+    public static var theme: JetThemeConfig { JetThemeRegistry.theme }
 
     /// Configure a custom theme for the library
     /// - Parameter config: Custom theme configuration conforming to `JetThemeConfig`
@@ -40,18 +46,31 @@ public enum JetUI {
     /// JetUI.configureTheme(MyAppTheme())
     /// ```
     public static func configureTheme(_ config: JetThemeConfig) {
-        theme = config
+        JetThemeRegistry.configure(config)
     }
 
     // MARK: - Subscription Configuration
 
-    public static var subscriptionConfig: JetSubscriptionConfig?
+    @MainActor
+    public static var subscriptionConfig: JetSubscriptionConfig? {
+        JetSubscriptionRegistry.config
+    }
 
-    public static var paywallConfiguration: JetPaywallConfiguration?
+    @MainActor
+    public static var paywallConfiguration: JetPaywallConfiguration? {
+        get { JetSubscriptionRegistry.paywallConfiguration }
+        set { JetSubscriptionRegistry.paywallConfiguration = newValue }
+    }
 
-    public private(set) static var subscriptionRuntime: JetSubscriptionRuntime?
+    @MainActor
+    public static var subscriptionRuntime: JetSubscriptionRuntime? {
+        JetSubscriptionRegistry.runtime
+    }
 
-    public private(set) static var subscriptionManager: JetSubscriptionManager?
+    @MainActor
+    public static var subscriptionManager: JetSubscriptionManager? {
+        JetSubscriptionRegistry.manager
+    }
 
     /// 配置日志 subsystem
     /// - Parameter subsystem: Bundle identifier 或自定义 subsystem
@@ -59,28 +78,18 @@ public enum JetUI {
         CSLogger.subsystem = subsystem
     }
 
-    /// 配置认证 API
-    /// - Parameter configuration: API 配置
-    public static func configureAuth(_ configuration: APIConfiguration) {
-        AuthTarget.configuration = configuration
-        NetworkCore.shared.authSession = AuthSession.shared
-    }
-
-    /// 配置账户 API
-    /// - Parameters:
-    ///   - baseURL: API 服务器地址
-    ///   - tokenProvider: 获取当前 Token 的闭包
-    public static func configureAccount(baseURL: URL, tokenProvider: (() -> String?)?) {
-        AccountTarget.configuration = DefaultAccountAPIConfiguration(
-            baseURL: baseURL,
-            tokenProvider: tokenProvider
-        )
-    }
-
-    /// 配置分析系统，并注册 Firebase adapter
+    /// 配置分析开关。具体 provider 由宿主 App 或 adapter 模块显式注册。
     /// - Parameter enabled: 是否启用分析
     public static func configureAnalytics(enabled: Bool = true) {
-        JetAnalytics.shared.register(FirebaseAnalyticsAdapter())
+        AnalyticsManager.isEnabled = enabled
+    }
+
+    /// 配置分析系统。
+    /// - Parameters:
+    ///   - provider: 具体分析 provider，例如 JetUIFirebaseAdapters.FirebaseAnalyticsAdapter
+    ///   - enabled: 是否启用分析
+    public static func configureAnalytics(provider: JetAnalyticsProvider, enabled: Bool = true) {
+        JetAnalytics.shared.register(provider)
         AnalyticsManager.isEnabled = enabled
     }
 
@@ -106,11 +115,14 @@ public enum JetUI {
         _ config: JetSubscriptionConfig,
         paywallConfiguration: JetPaywallConfiguration? = nil
     ) {
-        subscriptionConfig = config
         self.paywallConfiguration = paywallConfiguration
         let runtime = JetSubscriptionRuntime(config: config)
-        subscriptionRuntime = runtime
-        subscriptionManager = runtime.manager
+        configureSubscriptionRuntime(runtime)
+    }
+
+    @MainActor
+    public static func configureSubscriptionRuntime(_ runtime: JetSubscriptionRuntime) {
+        JetSubscriptionRegistry.configure(runtime: runtime)
     }
 }
 
@@ -131,7 +143,7 @@ public enum JetUI {
        - StateHelpers.swift        : SwiftUI 状态更新辅助函数
        - JetAssetSaver.swift       : 图片资源保存工具
 
- 📁 Network/                       # 网络层
+ 📁 Adapters/NetworkAuth/          # 可选网络/认证适配器 package
     📁 Core/
        - NetworkCore.swift         : Moya 网络核心
        - NetworkError.swift        : 错误类型
@@ -142,7 +154,7 @@ public enum JetUI {
        - AccountTarget.swift       : 账户/订阅 API 端点
        - AccountService.swift      : 账户/订阅 Service 层
 
- 📁 Auth/                          # 统一认证模块（原 Auth/ + Network/Auth/ 合并）
+ 📁 Auth/                          # 统一认证模块
     📁 Core/
        - AuthManager.swift         : 登录态、Keychain、Apple Sign-In、ECDSA 签名
        - AuthSession.swift         : Token 注入到 NetworkCore
@@ -154,13 +166,13 @@ public enum JetUI {
  📁 Analytics/                     # Analytics 抽象层（不绑定具体 SDK）
     - JetAnalyticsProtocol.swift   : JetAnalyticsProvider 协议 + JetAnalytics 注册中心
     - AnalyticsManager.swift       : 高层便利 API（logEvent, logScreen, logPurchase…）
-    📁 Firebase/
-       - FirebaseAnalyticsAdapter.swift : Firebase Analytics 具体实现（可替换）
 
  📁 Storage/                       # Storage 抽象层
     - JetCloudStorageProtocol.swift: JetCloudStorageProvider 协议 + JetCloudStorage 注册中心
-    📁 Firebase/
-       - JetStorageManager.swift   : Firebase Storage 具体实现（可替换）
+
+ 📁 Adapters/Firebase/             # 可选 Firebase 适配器 package
+    - FirebaseAnalyticsAdapter.swift : Firebase Analytics 具体实现
+    - JetStorageManager.swift        : Firebase Storage 具体实现
 
  📁 Extensions/                    # 系统类型扩展
     - UIImage+Jet.swift            : UIImage 扩展（裁剪、缩放、着色）
@@ -180,10 +192,11 @@ public enum JetUI {
        - JetGlassBackground.swift  : 毛玻璃背景组件 + JetBlurView
     📁 Switch/
        - JetCustomSwitch.swift     : 自定义开关组件
-    📁 Lottie/
-       - JetLottieView.swift       : Lottie 动画封装
     📁 Image/
        - JetCacheAsyncImage.swift  : 带缓存的异步图片组件
+
+ 📁 Adapters/Lottie/               # 可选 Lottie 适配器 package
+    - JetLottieView.swift          : Lottie 动画封装
 
  📁 Features/                      # 功能模块
     📁 Settings/                   # 设置模块
@@ -228,6 +241,7 @@ public enum JetUI {
 
  // 1. 配置
  JetUI.configureLogger(subsystem: "com.myapp")
+ // 可选：import JetUINetworkAuth 后可用
  JetUI.configureAuth(MyAPIConfig())
  JetUI.configureAccount(
      baseURL: URL(string: "https://api.example.com")!,
@@ -270,7 +284,7 @@ public enum JetUI {
  // 10. 自定义开关
  JetCustomSwitch(isOn: $isEnabled)
 
- // 11. Lottie 动画
+ // 11. Lottie 动画（可选：import JetUILottieAdapters）
  JetLottieView(filename: "animation", loopMode: .loop)
 
  // 12. 设置页面
@@ -383,7 +397,8 @@ public enum JetUI {
  - 扫光按钮动画
  - 可配置品牌、颜色、文案
 
- ## JetStorageManager
+ ## Firebase Storage Adapter（可选）
+ - 位于 Adapters/Firebase package
  - uploadImage() 上传图片
  - downloadImage() 下载图片
  - fetchAllImageNames() 列出所有文件

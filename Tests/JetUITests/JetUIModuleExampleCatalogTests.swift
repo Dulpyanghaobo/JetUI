@@ -6,16 +6,15 @@ final class JetUIModuleExampleCatalogTests: XCTestCase {
         let moduleIDs = JetUIModuleExampleCatalog.modules.map(\.id)
 
         XCTAssertEqual(moduleIDs, [
-            "auth",
+            "runtime",
             "components",
             "core",
-            "extensions",
-            "features",
-            "firebase",
-            "models",
-            "network",
-            "resources",
-            "theme"
+            "design",
+            "settings",
+            "subscription",
+            "analytics",
+            "onboarding",
+            "adapters"
         ])
     }
 
