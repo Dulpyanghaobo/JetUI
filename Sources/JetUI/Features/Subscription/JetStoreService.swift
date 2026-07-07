@@ -28,6 +28,20 @@ public protocol JetStoreServiceProtocol {
     func isEntitledToPro() async -> Bool
 }
 
+/// StoreKit 产品目录抽象，用于隔离 Product.products(for:) 方便测试和业务替换。
+public protocol JetProductCatalog {
+    func products(for ids: [String]) async throws -> [Product]
+}
+
+/// 默认 StoreKit 产品目录实现。
+public struct JetStoreKitProductCatalog: JetProductCatalog {
+    public init() {}
+
+    public func products(for ids: [String]) async throws -> [Product] {
+        try await Product.products(for: ids)
+    }
+}
+
 // MARK: - Error
 
 /// 商店错误类型
@@ -54,26 +68,32 @@ public enum JetStoreError: Error, LocalizedError {
 /// StoreKit 2 商店服务实现
 public final class JetStoreService: JetStoreServiceProtocol {
 
+    private let config: JetSubscriptionConfig?
     private let signer: JetPromotionalOfferSigner?
     private let accountService: AccountServiceProtocol
+    private let productCatalog: JetProductCatalog
 
     public init(
+        config: JetSubscriptionConfig? = nil,
         signer: JetPromotionalOfferSigner? = nil,
-        accountService: AccountServiceProtocol? = nil
+        accountService: AccountServiceProtocol? = nil,
+        productCatalog: JetProductCatalog = JetStoreKitProductCatalog()
     ) {
+        self.config = config
         self.signer = signer
         self.accountService = accountService ?? DefaultAccountService.shared
+        self.productCatalog = productCatalog
     }
 
     // MARK: - JetStoreServiceProtocol
 
     public func fetchProducts() async throws -> [Product] {
-        guard let config = JetUI.subscriptionConfig else { return [] }
+        guard let config = activeConfig else { return [] }
 
         guard !config.productIds.isEmpty else {
             throw JetStoreError.noProducts
         }
-        return try await Product.products(for: config.productIds)
+        return try await productCatalog.products(for: config.productIds)
     }
 
     public func purchase(_ product: Product) async throws -> (Transaction, String) {
@@ -144,7 +164,7 @@ public final class JetStoreService: JetStoreServiceProtocol {
     }
 
     public func isEntitledToPro() async -> Bool {
-        guard let config = JetUI.subscriptionConfig else {
+        guard let config = activeConfig else {
             AnalyticsManager.logEntitlementRefresh(
                 source: "status_check",
                 productId: nil,
@@ -197,7 +217,7 @@ public final class JetStoreService: JetStoreServiceProtocol {
     }
 
     private func refreshEntitlementCache(source: String) async {
-        guard let config = JetUI.subscriptionConfig else {
+        guard let config = activeConfig else {
             AnalyticsManager.logEntitlementRefresh(
                 source: source,
                 productId: nil,
@@ -234,7 +254,7 @@ public final class JetStoreService: JetStoreServiceProtocol {
     }
 
     private func updateEntitlementCacheIfNeeded(from transaction: Transaction, source: String) {
-        guard let config = JetUI.subscriptionConfig,
+        guard let config = activeConfig,
               config.proProductIds.contains(transaction.productID),
               transaction.revocationDate == nil else {
             return
@@ -260,6 +280,10 @@ public final class JetStoreService: JetStoreServiceProtocol {
                 object: nil
             )
         }
+    }
+
+    private var activeConfig: JetSubscriptionConfig? {
+        config ?? JetUI.subscriptionConfig
     }
 }
 

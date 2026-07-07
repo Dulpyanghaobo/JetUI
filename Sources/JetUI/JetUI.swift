@@ -49,6 +49,8 @@ public enum JetUI {
 
     public static var paywallConfiguration: JetPaywallConfiguration?
 
+    public private(set) static var subscriptionRuntime: JetSubscriptionRuntime?
+
     public private(set) static var subscriptionManager: JetSubscriptionManager?
 
     /// 配置日志 subsystem
@@ -106,7 +108,9 @@ public enum JetUI {
     ) {
         subscriptionConfig = config
         self.paywallConfiguration = paywallConfiguration
-        subscriptionManager = JetSubscriptionManager()
+        let runtime = JetSubscriptionRuntime(config: config)
+        subscriptionRuntime = runtime
+        subscriptionManager = runtime.manager
     }
 }
 

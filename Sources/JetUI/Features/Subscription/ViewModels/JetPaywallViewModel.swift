@@ -106,7 +106,7 @@ public final class JetPaywallViewModel: ObservableObject {
 
     public init(storeService: JetStoreServiceProtocol? = nil, paywallSource: String = "unknown") {
 
-        self.storeService = storeService ?? JetStoreService()
+        self.storeService = storeService ?? JetUI.subscriptionRuntime?.storeService ?? JetStoreService()
         self.paywallSource = paywallSource
 
         Task { @MainActor in
