@@ -90,6 +90,16 @@ public enum SubL {
             localized("subscription.period.lifetime")
         }
 
+        /// "Every week" / "每周"
+        public static var everyWeek: String {
+            localized("subscription.period.every_week")
+        }
+
+        /// "Every year" / "每年"
+        public static var everyYear: String {
+            localized("subscription.period.every_year")
+        }
+
         /// "%d Months" / "%d 个月"
         public static func months(_ count: Int) -> String {
             localizedFormat("subscription.period.months_format", count)
@@ -138,6 +148,16 @@ public enum SubL {
         /// "%d days free" / "%d 天免费"
         public static func daysFree(_ days: Int) -> String {
             localizedFormat("subscription.trial.days_free", days)
+        }
+
+        /// "3-day FREE Trial" / "3 天免费试用"
+        public static var threeDayTrialTitle: String {
+            localized("subscription.trial.three_day_title")
+        }
+
+        /// "3-day FREE Trial, Cancel anytime" / "3 天免费试用，可随时取消"
+        public static var threeDayTrialCancelAnytime: String {
+            localized("subscription.trial.three_day_cancel_anytime")
         }
 
         /// "%@ free, then %@" / "%@ 免费，之后 %@"
@@ -278,6 +298,11 @@ public enum SubL {
         /// "Terms & Conditions" / "条款与条件"
         public static var termsConditions: String {
             localized("subscription.legal.terms_conditions")
+        }
+
+        /// "Cancel anytime" / "可随时取消"
+        public static var cancelAnytime: String {
+            localized("subscription.legal.cancel_anytime")
         }
 
         /// "Auto-renewable. Cancel anytime." / "自动续订，可随时取消。"

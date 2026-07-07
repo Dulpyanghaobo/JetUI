@@ -27,16 +27,11 @@ public struct JetTrialPaywallView: View {
     @State private var restoreTapPending = false
     @State private var autoSelectedLogged = false // 新增：追踪是否已执行自动选中
     @State private var isShimmering = false
+    @State private var fallbackSelectedPlanID = "weekly"
 
     private let config: JetTrialPaywallConfig
     private let onSuccess: () -> Void
     private let onDismiss: (() -> Void)?
-
-    private var isYearlySelected: Bool {
-        guard let id = vm.selectedProductID,
-              let plan = vm.plans.first(where: { $0.id == id }) else { return false }
-        return plan.isYearly
-    }
 
     public init(
         viewModel: JetPaywallViewModel? = nil,
@@ -62,95 +57,89 @@ public struct JetTrialPaywallView: View {
         self.onDismiss = onDismiss
     }
 
-    // 补齐：默认选中 Yearly 的交互逻辑
-    private func selectYearlyByDefault() {
-        guard vm.selectedProductID == nil else { return }
+    private func selectTrialPlanByDefault() {
+        guard !autoSelectedLogged else { return }
+        guard let preferred = vm.plans.first(where: { $0.trialBadge != nil && !$0.isYearly })
+                ?? vm.plans.first(where: { $0.trialBadge != nil })
+                ?? vm.plans.first(where: { !$0.isYearly })
+                ?? vm.plans.first else { return }
 
-        if let yearly = vm.plans.first(where: { $0.isYearly }) {
-            vm.selectedProductID = yearly.id
-            if !autoSelectedLogged {
-                autoSelectedLogged = true
-                // AnalyticsManager.logEvent("paywall_option_autoselect"...)
-            }
-        } else if let first = vm.plans.first {
-            vm.selectedProductID = first.id
-            if !autoSelectedLogged {
-                autoSelectedLogged = true
-                // AnalyticsManager.logEvent("paywall_option_autoselect"...)
-            }
+        if vm.selectedProductID == nil || vm.plans.first(where: { $0.id == vm.selectedProductID })?.isYearly == true {
+            vm.selectedProductID = preferred.id
         }
+        autoSelectedLogged = true
     }
 
     public var body: some View {
-        ZStack(alignment: .top) {
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [config.backgroundColor, .black],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(height: 400)
-                .edgesIgnoringSafeArea(.top)
+        GeometryReader { proxy in
+            let bottomInset = max(proxy.safeAreaInsets.bottom, 14)
+            let contentMaxWidth: CGFloat = 560
+            let bottomReserve = bottomInset + 132
 
-            VStack(spacing: 24) {
-                header
+            ZStack(alignment: .top) {
+                timelineBackground
 
-                Text(isYearlySelected ? config.trialTitle : config.lifetimeTitle)
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        header
 
-                topContent
-                    .padding(.bottom, 16)
+                        Text(config.trialTitle)
+                            .font(.system(size: 31, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.82)
+                            .padding(.top, 18)
+                            .padding(.horizontal, 10)
 
-                priceOptions
-                    .padding(.top, 8)
+                        topContent
+                            .padding(.top, 18)
 
-                if let recovery = vm.recoveryState {
-                    recoveryStateView(recovery)
+                        priceOptions
+                            .padding(.top, 18)
+
+                        if let recovery = vm.recoveryState {
+                            recoveryStateView(recovery)
+                                .padding(.top, 14)
+                        }
+
+                        Color.clear
+                            .frame(height: bottomReserve)
+                    }
+                    .frame(maxWidth: contentMaxWidth)
+                    .padding(.horizontal, 20)
+                    .frame(maxWidth: .infinity)
                 }
 
-                Spacer(minLength: 8)
-
                 VStack(spacing: 0) {
-                    // 补齐：固定高度以防止切换时 UI 跳动
-                    Group {
-                        if let hint = vm.nextRenewalHint {
-                            Text(hint)
-                                .font(.caption)
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 8)
-                        } else {
-                            Text(" ")
-                                .font(.caption)
-                                .foregroundColor(.clear)
-                        }
-                    }
-                    .frame(height: 32, alignment: .center)
+                    renewalHint
+                        .frame(height: 24, alignment: .center)
 
                     continueButton
 
                     legalLinks
-                        .padding(.top, 4)
+                        .padding(.top, 2)
                 }
+                .frame(maxWidth: contentMaxWidth)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, bottomInset)
+                .frame(maxWidth: .infinity)
+                .background(
+                    LinearGradient(
+                        colors: [.black.opacity(0), .black.opacity(0.94), .black],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+
             }
-            .padding(20)
-            .task { selectYearlyByDefault() }
-            .onChange(of: vm.plans) { _ in selectYearlyByDefault() }
-            if vm.isLoading {
-                Color.black.opacity(0.4).ignoresSafeArea()
-                ProgressView(SubL.Button.loading)
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.black.opacity(0.7))
-                    .cornerRadius(12)
-            }
+            .task { selectTrialPlanByDefault() }
+            .onChange(of: vm.plans) { _, _ in selectTrialPlanByDefault() }
         }
         .background(.black)
-        .onChange(of: vm.shouldDismissPaywall) { ok in
+        .onChange(of: vm.shouldDismissPaywall) { _, ok in
             if ok {
                 logSuccessEvent()
                 onSuccess()
@@ -169,6 +158,20 @@ public struct JetTrialPaywallView: View {
 
 private extension JetTrialPaywallView {
 
+    var timelineBackground: some View {
+        LinearGradient(
+            colors: [
+                config.backgroundColor.opacity(0.96),
+                config.backgroundColor.opacity(0.35),
+                .black,
+                .black
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+    }
+
     var header: some View {
         HStack {
             Button(action: {
@@ -180,7 +183,7 @@ private extension JetTrialPaywallView {
                 dismiss()
             }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: 25, weight: .semibold, design: .rounded))
                     .padding(10)
             }
             .contentShape(Rectangle())
@@ -192,7 +195,7 @@ private extension JetTrialPaywallView {
                 restoreTapPending = true
                 Task { await vm.restore() }
             }
-            .font(.callout.bold())
+            .font(.system(size: 19, weight: .bold, design: .rounded))
             .padding(10)
             .disabled(vm.restoreInProgress)
             .opacity(vm.restoreInProgress ? 0.6 : 1)
@@ -202,8 +205,7 @@ private extension JetTrialPaywallView {
 
     @ViewBuilder
     var topContent: some View {
-        if isYearlySelected {
-            // 试用流程时间线
+        if !config.trialSteps.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(config.trialSteps.enumerated()), id: \.offset) { index, step in
                     TimelineStepRow(
@@ -216,9 +218,8 @@ private extension JetTrialPaywallView {
                     )
                 }
             }
-            .frame(height: 250, alignment: .top)
+            .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            // 功能列表
             VStack(alignment: .leading, spacing: 14) {
                 ForEach(config.benefits, id: \.self) { benefit in
                     BenefitRow(
@@ -227,32 +228,108 @@ private extension JetTrialPaywallView {
                     )
                 }
             }
-            .padding(.top, 4)
-            .padding(.horizontal, 10)
-            .frame(height: 250, alignment: .top)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     var priceOptions: some View {
         VStack(spacing: 12) {
-            ForEach(vm.plans) { plan in
-                JetPriceRow(
-                    title: plan.title,
-                    message: plan.trialBadge ?? plan.promoBadge ?? plan.sublineText ?? "",
-                    price: plan.priceText,
-                    isSelected: vm.selectedProductID == plan.id,
-                    cornerTag: calculateSaveTag(for: plan),
-                    allowHighlight: plan.isYearly,
-                    accentColor: config.accentColor
-                ) {
-                    AnalyticsManager.logEvent(JetPaywallEvent.optionSelect, parameters: [
-                        "plan_id": plan.id,
-                        "title": plan.title
-                    ])
-                    vm.selectedProductID = plan.id
+            if vm.plans.isEmpty {
+                fallbackPriceOptions
+            } else {
+                ForEach(orderedPlans) { plan in
+                    TrialPriceOptionRow(
+                        title: displayTitle(for: plan),
+                        message: priceMessage(for: plan),
+                        price: plan.priceText,
+                        isSelected: vm.selectedProductID == plan.id,
+                        cornerTag: calculateSaveTag(for: plan),
+                        accentColor: config.accentColor
+                    ) {
+                        AnalyticsManager.logEvent(JetPaywallEvent.optionSelect, parameters: [
+                            "plan_id": plan.id,
+                            "title": plan.title
+                        ])
+                        vm.selectedProductID = plan.id
+                    }
                 }
             }
         }
+    }
+
+    var orderedPlans: [JetPlanDisplay] {
+        let weeklyPlans = vm.plans.filter { $0.isWeekly }
+        let yearlyPlans = vm.plans.filter { $0.isYearly }
+        let otherPlans = vm.plans.filter { !$0.isWeekly && !$0.isYearly }
+        return weeklyPlans + yearlyPlans + otherPlans
+    }
+
+    var fallbackPriceOptions: some View {
+        VStack(spacing: 12) {
+            TrialPriceOptionRow(
+                title: SubL.Period.everyWeek,
+                message: SubL.Trial.threeDayTrialCancelAnytime,
+                price: vm.isLoading ? SubL.Button.loading : "--",
+                isSelected: fallbackSelectedPlanID == "weekly",
+                cornerTag: nil,
+                accentColor: config.accentColor
+            ) {
+                fallbackSelectedPlanID = "weekly"
+            }
+
+            TrialPriceOptionRow(
+                title: SubL.Period.everyYear,
+                message: config.autoRenewalTip,
+                price: vm.isLoading ? SubL.Button.loading : "--",
+                isSelected: fallbackSelectedPlanID == "yearly",
+                cornerTag: nil,
+                accentColor: config.accentColor
+            ) {
+                fallbackSelectedPlanID = "yearly"
+            }
+
+            if !vm.isLoading {
+                HStack(spacing: 10) {
+                    Button(SubL.Button.retry) {
+                        Task { await vm.load() }
+                    }
+                    .font(.footnote.weight(.semibold))
+
+                    Button(config.restoreButtonTitle) {
+                        restoreTapPending = true
+                        Task { await vm.restore() }
+                    }
+                    .font(.footnote.weight(.semibold))
+                }
+                .foregroundColor(.white.opacity(0.72))
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 2)
+            }
+        }
+    }
+
+    func displayTitle(for plan: JetPlanDisplay) -> String {
+        if plan.isWeekly { return SubL.Period.everyWeek }
+        if plan.isYearly { return SubL.Period.everyYear }
+        return plan.title
+    }
+
+    func priceMessage(for plan: JetPlanDisplay) -> String {
+        if let trialBadge = plan.trialBadge, !trialBadge.isEmpty {
+            return SubL.Trial.threeDayTrialCancelAnytime
+        }
+        if let yearlyWeeklyMessage = yearlyWeeklyEquivalentMessage(for: plan) {
+            return yearlyWeeklyMessage
+        }
+        return plan.promoBadge ?? plan.sublineText ?? ""
+    }
+
+    func yearlyWeeklyEquivalentMessage(for plan: JetPlanDisplay) -> String? {
+        guard plan.isYearly,
+              plan.product.price > 0 else { return nil }
+
+        let weeklyPrice = plan.product.price / Decimal(52)
+        return "\(SubL.Price.perWeek(weeklyPrice.formatted(plan.product.priceFormatStyle))), \(SubL.Legal.cancelAnytime)"
     }
 
     func recoveryStateView(_ recovery: JetPaywallRecoveryState) -> some View {
@@ -326,22 +403,22 @@ private extension JetTrialPaywallView {
             Task { await vm.purchaseSelected() }
         } label: {
             let title: String = {
+                if vm.plans.isEmpty && vm.isLoading { return SubL.Button.loading }
                 if isBusy { return config.processingTitle }
                 if let badge = sel?.trialBadge, !badge.isEmpty {
-                    if let prefix = badge.split(separator: ",").first { return String(prefix) }
-                    return badge
+                    return SubL.Trial.threeDayTrialTitle
                 }
                 return config.continueButtonTitle
             }()
 
             Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundColor(.white.opacity(0.88))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+                .padding(.vertical, 10)
                 .background(
                     ZStack {
-                        RoundedRectangle(cornerRadius: 28)
+                        RoundedRectangle(cornerRadius: 30)
                             .fill(config.accentColor)
 
                         if !isBusy && vm.selectedProductID != nil {
@@ -349,7 +426,8 @@ private extension JetTrialPaywallView {
                         }
                     }
                 )
-                .padding()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 7)
         }
         .disabled(isBusy || vm.selectedProductID == nil)
         .opacity(isBusy || vm.selectedProductID == nil ? 0.6 : 1)
@@ -384,7 +462,7 @@ private extension JetTrialPaywallView {
                     }
                 }
         }
-        .mask(RoundedRectangle(cornerRadius: 28))
+        .mask(RoundedRectangle(cornerRadius: 30))
         .allowsHitTesting(false)
     }
 
@@ -447,7 +525,7 @@ private struct TimelineStepRow: View {
     var isLast: Bool = false
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .center, spacing: 14) {
             TimelineColumn(
                 iconName: iconName,
                 accentColor: accentColor,
@@ -455,23 +533,23 @@ private struct TimelineStepRow: View {
                 isLast: isLast
             )
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.body.weight(.medium))
+                    .font(.system(size: 21, weight: .semibold, design: .rounded))
                     .foregroundColor(.white)
                     .fixedSize(horizontal: false, vertical: true)
                 if let message = message, !message.isEmpty {
                     Text(message)
-                        .font(.footnote)
-                        .foregroundColor(.white.opacity(0.7))
+                        .font(.system(size: 14.5, weight: .regular, design: .rounded))
+                        .foregroundColor(.white.opacity(0.58))
                         .lineLimit(nil)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .frame(minHeight: 62)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(minHeight: 80)
+        .frame(height: 82)
     }
 }
 
@@ -486,18 +564,18 @@ private struct TimelineColumn: View {
             VStack(spacing: 0) {
                 if !isFirst {
                     Rectangle()
-                        .fill(Color.white.opacity(0.18))
+                        .fill(Color.white.opacity(0.22))
                         .frame(width: 8)
                         .frame(maxHeight: .infinity)
                 } else {
                     Spacer(minLength: 0)
                 }
 
-                Spacer().frame(height: 36)
+                Spacer().frame(height: 50)
 
                 if !isLast {
                     Rectangle()
-                        .fill(isFirst ? accentColor : .white.opacity(0.18))
+                        .fill(isFirst ? accentColor : .white.opacity(0.22))
                         .frame(width: 8)
                         .frame(maxHeight: .infinity)
                 } else {
@@ -505,9 +583,99 @@ private struct TimelineColumn: View {
                 }
             }
 
-            PaywallIconImage(name: iconName, size: 36, foregroundColor: accentColor)
+            ZStack {
+                Circle()
+                    .fill(isFirst ? accentColor : Color.white.opacity(0.12))
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white.opacity(isFirst ? 0 : 0.08), lineWidth: 1)
+                    )
+                    .shadow(color: .black.opacity(isFirst ? 0.18 : 0.25), radius: 8, y: 4)
+
+                PaywallIconImage(
+                    name: iconName,
+                    size: 26,
+                    foregroundColor: isFirst ? .black : .white
+                )
+            }
+            .frame(width: 50, height: 50)
         }
-        .frame(width: 36)
+        .frame(width: 56)
+    }
+}
+
+private struct TrialPriceOptionRow: View {
+    let title: String
+    let message: String
+    let price: String
+    let isSelected: Bool
+    let cornerTag: String?
+    let accentColor: Color
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 19, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+
+                    if !message.isEmpty {
+                        highlightedMessage
+                            .font(.system(size: 14.5, weight: .medium, design: .rounded))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+
+                Spacer(minLength: 10)
+
+                Text(price)
+                    .font(.system(size: 19, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .frame(minHeight: 72)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(isSelected ? accentColor.opacity(0.22) : Color.white.opacity(0.10))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(isSelected ? accentColor : Color.clear, lineWidth: 2.5)
+            )
+            .overlay(alignment: .topTrailing) {
+                if let cornerTag, !cornerTag.isEmpty {
+                    Text(cornerTag.uppercased())
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(accentColor))
+                        .offset(y: -13)
+                        .padding(.trailing, 0)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .contentShape(RoundedRectangle(cornerRadius: 20))
+    }
+
+    private var highlightedMessage: Text {
+        guard let commaIndex = message.firstIndex(of: ",") else {
+            return Text(message).foregroundColor(.white.opacity(0.62))
+        }
+
+        let firstPart = String(message[..<commaIndex])
+        let secondPart = String(message[commaIndex...])
+        return Text(firstPart).foregroundColor(accentColor)
+            + Text(secondPart).foregroundColor(.white.opacity(0.62))
     }
 }
 

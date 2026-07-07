@@ -206,9 +206,13 @@ public struct JetPaywallView: View {
 
     public var body: some View {
             GeometryReader { proxy in
-                let topInset = proxy.safeAreaInsets.top + 42
                 let bottomInset = proxy.safeAreaInsets.bottom
                 let heroH = min(max(proxy.size.height * 0.38, 240), 420)
+                let topInset = max(proxy.safeAreaInsets.top, 20) + 4
+                let titleTopPadding = topInset + headerHeight - 4
+                let desiredBenefitTopLift = max(topInset + 64, 112)
+                let maxBenefitTopLift = max(CGFloat.zero, heroH + 24 - (titleTopPadding + 64))
+                let benefitTopLift = min(desiredBenefitTopLift, maxBenefitTopLift)
 
                 ZStack(alignment: .top) {
                     Color.black.ignoresSafeArea()
@@ -216,13 +220,13 @@ public struct JetPaywallView: View {
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 24) {
                             // 修正传入的 topPadding，确切对齐原版
-                            heroSection(heroH: heroH, topPadding: topInset + headerHeight)
+                            heroSection(heroH: heroH, topPadding: titleTopPadding)
 
                             if !configuration.benefits.isEmpty {
                                 benefitList
                                     .frame(maxWidth: contentMaxWidth)
                                     .padding(.horizontal, 40)
-                                    .padding(.top, -topInset - 16)
+                                    .padding(.top, -benefitTopLift)
                             }
 
                             priceOptions
