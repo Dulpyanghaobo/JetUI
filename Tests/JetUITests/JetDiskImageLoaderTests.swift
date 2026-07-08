@@ -94,8 +94,11 @@ final class JetDiskImageLoaderTests: XCTestCase {
 
     func testCancelDownloadStopsInFlightRequest() {
         let url = URL(string: "https://example.com/slow.png")!
+        let started = expectation(description: "URL loading started")
         let stopped = expectation(description: "URL loading stopped")
-        JetURLProtocolStub.startHandler = { _ in }
+        JetURLProtocolStub.startHandler = { _ in
+            started.fulfill()
+        }
         JetURLProtocolStub.stopHandler = {
             stopped.fulfill()
         }
@@ -105,6 +108,7 @@ final class JetDiskImageLoaderTests: XCTestCase {
         )
 
         loader.load(url: url) { _ in }
+        wait(for: [started], timeout: 2)
         loader.cancelDownload(for: url)
 
         wait(for: [stopped], timeout: 2)

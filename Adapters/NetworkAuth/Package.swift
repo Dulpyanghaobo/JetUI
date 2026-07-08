@@ -15,7 +15,6 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../.."),
-        .package(url: "https://github.com/Moya/Moya.git", from: "15.0.0"),
         .package(url: "https://github.com/kishikawakatsumi/KeychainAccess.git", from: "4.2.2")
     ],
     targets: [
@@ -24,7 +23,6 @@ let package = Package(
             dependencies: [
                 .product(name: "JetUI", package: "JetUI"),
                 .product(name: "JetUICore", package: "JetUI"),
-                "Moya",
                 "KeychainAccess"
             ]
         )

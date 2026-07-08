@@ -100,9 +100,9 @@ public final class AuthSession: AuthSessionProvider {
     /// 保存登录结果
     /// - Parameter result: 登录结果
     public func save(_ result: LoginResult) {
-        accessToken = result.accessToken
+        accessToken = result.accessToken ?? result.token
         refreshToken = result.refreshToken
-        userId = result.userId
+        userId = result.userId ?? result.userInfo?.id.map(String.init)
         
         CSLogger.info("AuthSession: Tokens saved", category: .auth)
     }

@@ -189,6 +189,40 @@ public enum AppColor {
     /// Points/currency indicator color
     /// Use for: Points display, currency amounts
     public static var pointsColor: Color { JetThemeRegistry.theme.colors.pointsYellow }
+
+    // MARK: - Legacy App Token Aliases
+    //
+    // These keep older host apps compiling while the values still come from the
+    // active JetUI theme. Prefer the semantic names above in new code.
+
+    public static var themeColor: Color { brandPrimary }
+    public static var theme2Color: Color { accentMint }
+    public static var theme3Color: Color { accentOrange }
+    public static var theme4Color: Color { accentGoldHighlight }
+
+    public static var backgroundColor: Color { backgroundPrimary }
+    public static var baordColor: Color { labelDisabled }
+    public static var backgroundTextColor: Color { labelTertiary }
+
+    public static var primaryBackground: Color { surfaceElevated }
+    public static var primary700: Color { backgroundSecondary }
+    public static var primary300: Color { accentMint }
+    public static var primary100: Color { accentGoldHighlight }
+
+    public static var gray900: Color { JetThemeRegistry.theme.colors.gray900 }
+    public static var gray700: Color { JetThemeRegistry.theme.colors.gray700 }
+    public static var gray500: Color { JetThemeRegistry.theme.colors.gray500 }
+    public static var gray300: Color { JetThemeRegistry.theme.colors.gray300 }
+    public static var gray100: Color { JetThemeRegistry.theme.colors.gray100 }
+
+    public static var success: Color { statusSuccess }
+    public static var warning: Color { statusWarning }
+    public static var error: Color { statusError }
+    public static var itemcolor: Color { labelTertiary }
+    public static var buttonbackground: Color { surfaceSecondary }
+    public static var buttontint: Color { linkColor }
+    public static var text1: Color { labelSecondary }
+    public static var title2: Color { labelPrimary }
 }
 
 // MARK: - Color Utilities
@@ -234,6 +268,46 @@ public extension Color {
         self.init(.sRGB, red: r, green: g, blue: b, opacity: a)
     }
 }
+
+#if canImport(UIKit)
+public extension UIColor {
+    static var themeColor: UIColor { UIColor(AppColor.brandPrimary) }
+    static var pageControlBackColor: UIColor { UIColor(AppColor.labelDisabled) }
+    static var backgroundColor: UIColor { UIColor(AppColor.backgroundPrimary) }
+
+    static var appPrimary500: UIColor { UIColor(AppColor.accentGold) }
+    static var appPrimary600: UIColor { UIColor(AppColor.accentGoldDark) }
+    static var appPrimary700: UIColor { UIColor(AppColor.accentGoldDark) }
+    static var appPrimary300: UIColor { UIColor(AppColor.accentGoldHighlight) }
+    static var appPrimary100: UIColor { UIColor(AppColor.primary100) }
+
+    static var appGray900: UIColor { UIColor(AppColor.gray900) }
+    static var appGray700: UIColor { UIColor(AppColor.gray700) }
+    static var appGray500: UIColor { UIColor(AppColor.gray500) }
+    static var appGray300: UIColor { UIColor(AppColor.gray300) }
+    static var appGray100: UIColor { UIColor(AppColor.gray100) }
+
+    static var appSuccess: UIColor { UIColor(AppColor.statusSuccess) }
+    static var appWarning: UIColor { UIColor(AppColor.statusWarning) }
+    static var appError: UIColor { UIColor(AppColor.statusError) }
+
+    func toHexString() -> String? {
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        guard getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
+
+        let rgba = (
+            Int(r * 255) << 24 |
+            Int(g * 255) << 16 |
+            Int(b * 255) << 8 |
+            Int(a * 255)
+        )
+        return String(format: "#%08X", rgba)
+    }
+}
+#endif
 
 // MARK: - Migration Guide
 /*

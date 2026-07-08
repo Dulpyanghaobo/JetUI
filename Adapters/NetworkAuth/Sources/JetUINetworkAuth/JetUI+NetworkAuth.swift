@@ -20,10 +20,16 @@ public extension JetUI {
     /// - Parameters:
     ///   - baseURL: API 服务器地址
     ///   - tokenProvider: 获取当前 Token 的闭包
-    static func configureAccount(baseURL: URL, tokenProvider: (() -> String?)?) {
+    ///   - paths: 自定义账户/订阅端点，默认保持 JetUI/TimeProof 行为
+    static func configureAccount(
+        baseURL: URL,
+        tokenProvider: (() -> String?)?,
+        paths: AccountEndpointPaths = .default
+    ) {
         AccountTarget.configuration = DefaultAccountAPIConfiguration(
             baseURL: baseURL,
-            tokenProvider: tokenProvider
+            tokenProvider: tokenProvider,
+            paths: paths
         )
     }
 }

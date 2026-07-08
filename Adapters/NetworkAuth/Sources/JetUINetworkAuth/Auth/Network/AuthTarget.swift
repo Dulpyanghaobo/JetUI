@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Moya
 
 /// API 基础配置协议
 public protocol APIConfiguration {
@@ -87,7 +86,7 @@ extension AuthTarget: TargetType {
         }
     }
     
-    public var task: Task {
+    public var task: NetworkTask {
         switch self {
         case .loginGuest(let deviceId, let osVersion, let fcmToken, let source):
             var params: [String: Any] = [
@@ -154,5 +153,9 @@ extension AuthTarget: TargetType {
         default:
             return true
         }
+    }
+
+    public var sampleData: Data {
+        Data()
     }
 }

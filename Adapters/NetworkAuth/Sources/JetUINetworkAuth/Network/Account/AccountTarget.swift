@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Moya
 
 // MARK: - Account Target
 
@@ -50,17 +49,55 @@ public struct DeviceInfo {
 public protocol AccountAPIConfiguration {
     var baseURL: URL { get }
     var tokenProvider: (() -> String?)? { get }
+    var paths: AccountEndpointPaths { get }
 }
 
 /// 默认配置
 public struct DefaultAccountAPIConfiguration: AccountAPIConfiguration {
     public let baseURL: URL
     public let tokenProvider: (() -> String?)?
+    public let paths: AccountEndpointPaths
     
-    public init(baseURL: URL, tokenProvider: (() -> String?)? = nil) {
+    public init(
+        baseURL: URL,
+        tokenProvider: (() -> String?)? = nil,
+        paths: AccountEndpointPaths = .default
+    ) {
         self.baseURL = baseURL
         self.tokenProvider = tokenProvider
+        self.paths = paths
     }
+}
+
+/// Host-app configurable account endpoint paths.
+public struct AccountEndpointPaths {
+    public var loginGuest: String
+    public var appleBind: String
+    public var logout: String
+    public var deleteAccount: String
+    public var userInfo: String
+    public var subscriptionStatus: String
+    public var bindSubscription: String
+
+    public init(
+        loginGuest: String = "/api/app/auth/login/guest",
+        appleBind: String = "/api/app/auth/apple/bind",
+        logout: String = "/api/app/auth/logout",
+        deleteAccount: String = "/api/app/auth/account",
+        userInfo: String = "/api/app/info",
+        subscriptionStatus: String = "/api/app/subscription/status",
+        bindSubscription: String = "/api/app/subscription/bind/apple"
+    ) {
+        self.loginGuest = loginGuest
+        self.appleBind = appleBind
+        self.logout = logout
+        self.deleteAccount = deleteAccount
+        self.userInfo = userInfo
+        self.subscriptionStatus = subscriptionStatus
+        self.bindSubscription = bindSubscription
+    }
+
+    public static let `default` = AccountEndpointPaths()
 }
 
 // MARK: - Static Configuration
@@ -83,21 +120,22 @@ extension AccountTarget: TargetType {
     }
     
     public var path: String {
+        let paths = AccountTarget.configuration?.paths ?? .default
         switch self {
         case .loginGuest:
-            return "/api/app/auth/login/guest"
+            return paths.loginGuest
         case .appleBind:
-            return "/api/app/auth/apple/bind"
+            return paths.appleBind
         case .logout:
-            return "/api/app/auth/logout"
+            return paths.logout
         case .deleteAccount:
-            return "/api/app/auth/account"
+            return paths.deleteAccount
         case .userInfo:
-            return "/api/app/info"
+            return paths.userInfo
         case .subscriptionStatus:
-            return "/api/app/subscription/status"
+            return paths.subscriptionStatus
         case .bindSubscription:
-            return "/api/app/subscription/bind/apple"
+            return paths.bindSubscription
         }
     }
     
@@ -112,7 +150,7 @@ extension AccountTarget: TargetType {
         }
     }
     
-    public var task: Moya.Task {
+    public var task: NetworkTask {
         switch self {
         case .loginGuest(let deviceId, let osVersion, let fcmToken, let source, let deviceInfo):
             let params: [String: Any] = [
