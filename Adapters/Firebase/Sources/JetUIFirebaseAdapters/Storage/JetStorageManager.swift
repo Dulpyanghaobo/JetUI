@@ -14,6 +14,38 @@ import UIKit
 import FirebaseStorage
 import JetUI
 
+/// Resolves the current Firebase Storage root path for the active app/user.
+public struct JetStorageRootPathProvider {
+    private let resolveRootPath: () -> String
+
+    public init(_ resolveRootPath: @escaping () -> String) {
+        self.resolveRootPath = resolveRootPath
+    }
+
+    public func currentRootPath() -> String {
+        Self.normalizedRootPath(resolveRootPath())
+    }
+
+    public static var deviceDefault: JetStorageRootPathProvider {
+        JetStorageRootPathProvider {
+            deviceRootPath()
+        }
+    }
+
+    public static func deviceRootPath(deviceId: String? = UIDevice.current.identifierForVendor?.uuidString) -> String {
+        let resolvedDeviceId = deviceId?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .nonEmpty ?? "unknown-device"
+        return "timestamp/ios/\(resolvedDeviceId)/"
+    }
+
+    public static func normalizedRootPath(_ rawPath: String) -> String {
+        let trimmedPath = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rootPath = trimmedPath.nonEmpty ?? deviceRootPath(deviceId: nil)
+        return rootPath.hasSuffix("/") ? rootPath : "\(rootPath)/"
+    }
+}
+
 /// Firebase Storage adapter conforming to JetCloudStorageProvider.
 public final class JetStorageManager: JetCloudStorageProvider {
     
@@ -24,15 +56,29 @@ public final class JetStorageManager: JetCloudStorageProvider {
     // MARK: - Properties
     
     private let storage = Storage.storage()
+    private let rootPathLock = NSLock()
+    private var rootPathProvider: JetStorageRootPathProvider
     
     // MARK: - Initialization
     
-    private init() {}
+    public init(rootPathProvider: JetStorageRootPathProvider = .deviceDefault) {
+        self.rootPathProvider = rootPathProvider
+    }
+
+    public func configureRootPathProvider(_ provider: JetStorageRootPathProvider) {
+        rootPathLock.lock()
+        rootPathProvider = provider
+        rootPathLock.unlock()
+    }
+
+    public func configureRootPathProvider(_ resolveRootPath: @escaping () -> String) {
+        configureRootPathProvider(JetStorageRootPathProvider(resolveRootPath))
+    }
     
     // MARK: - Upload
     
     /// 把图片上传到当前用户的专属目录：
-    /// <AuthManager.currentCloudStorageRootPath>/<filename>
+    /// <JetStorageRootPathProvider.currentRootPath()>/<filename>
     /// - Parameters:
     ///   - image: 要上传的图片
     ///   - filename: 文件名
@@ -61,18 +107,14 @@ public final class JetStorageManager: JetCloudStorageProvider {
             return
         }
         
-        // 2️⃣ 决定上传路径：基于当前用户的云空间根目录
-        let rootPath = AuthManager.shared.currentCloudStorageRootPath
-        // 注意：rootPath 这里已经保证是以 "/" 结尾的
-        let fileRef = storage.reference()
-            .child(rootPath)
-            .child(filename)
+        // 2️⃣ 决定上传路径：基于宿主 App 注入的云空间根目录
+        let fileRef = fileReference(named: filename)
         
         let metadata = StorageMetadata()
         metadata.contentType = "image/jpeg"
         
         // 3️⃣ 上传
-        fileRef.putData(data, metadata: metadata) { [weak self] _, error in
+        fileRef.putData(data, metadata: metadata) { _, error in
             guard error == nil else {
                 completion(.failure(error!))
                 return
@@ -119,8 +161,7 @@ public final class JetStorageManager: JetCloudStorageProvider {
     /// 列出当前用户云空间根目录下的所有文件名（仅一层，不递归子目录）
     /// - Returns: 文件名数组
     public func fetchAllImageNames() async throws -> [String] {
-        let rootPath = AuthManager.shared.currentCloudStorageRootPath
-        let rootRef = storage.reference().child(rootPath)
+        let rootRef = rootReference()
         
         let names: [String] = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<[String], Error>) in
             rootRef.listAll { result, error in
@@ -149,10 +190,7 @@ public final class JetStorageManager: JetCloudStorageProvider {
     /// - Parameter filename: 文件名
     /// - Returns: 下载的图片
     public func downloadImage(named filename: String) async throws -> UIImage {
-        let rootPath = AuthManager.shared.currentCloudStorageRootPath
-        let fileRef = storage.reference()
-            .child(rootPath)
-            .child(filename)
+        let fileRef = fileReference(named: filename)
         
         // 最大 20MB
         let maxSize: Int64 = 20 * 1024 * 1024
@@ -189,10 +227,7 @@ public final class JetStorageManager: JetCloudStorageProvider {
     /// 删除指定文件
     /// - Parameter filename: 文件名
     public func deleteImage(named filename: String) async throws {
-        let rootPath = AuthManager.shared.currentCloudStorageRootPath
-        let fileRef = storage.reference()
-            .child(rootPath)
-            .child(filename)
+        let fileRef = fileReference(named: filename)
         
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             fileRef.delete { error in
@@ -211,10 +246,7 @@ public final class JetStorageManager: JetCloudStorageProvider {
     /// - Parameter filename: 文件名
     /// - Returns: 文件元数据
     public func getMetadata(for filename: String) async throws -> StorageMetadata {
-        let rootPath = AuthManager.shared.currentCloudStorageRootPath
-        let fileRef = storage.reference()
-            .child(rootPath)
-            .child(filename)
+        let fileRef = fileReference(named: filename)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<StorageMetadata, Error>) in
             fileRef.getMetadata { metadata, error in
@@ -238,10 +270,7 @@ public final class JetStorageManager: JetCloudStorageProvider {
     /// - Parameter filename: 文件名
     /// - Returns: 下载 URL
     public func getDownloadURL(for filename: String) async throws -> URL {
-        let rootPath = AuthManager.shared.currentCloudStorageRootPath
-        let fileRef = storage.reference()
-            .child(rootPath)
-            .child(filename)
+        let fileRef = fileReference(named: filename)
         
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
             fileRef.downloadURL { url, error in
@@ -259,5 +288,28 @@ public final class JetStorageManager: JetCloudStorageProvider {
                 }
             }
         }
+    }
+}
+
+private extension JetStorageManager {
+    func currentRootPath() -> String {
+        rootPathLock.lock()
+        let provider = rootPathProvider
+        rootPathLock.unlock()
+        return provider.currentRootPath()
+    }
+
+    func rootReference() -> StorageReference {
+        storage.reference().child(currentRootPath())
+    }
+
+    func fileReference(named filename: String) -> StorageReference {
+        rootReference().child(filename)
+    }
+}
+
+private extension String {
+    var nonEmpty: String? {
+        isEmpty ? nil : self
     }
 }
