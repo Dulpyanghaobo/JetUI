@@ -24,6 +24,31 @@ final class JetRecommendationsContractTests: XCTestCase {
         XCTAssertEqual(item.actionTitle, "Get")
     }
 
+    func testAppItemStoresFallbackURLAndDisclosurePreference() {
+        let fallbackURL = URL(string: "https://apps.apple.com/us/app/jet-camera-timeproof-camera/id6755984821")!
+        let item = JetAppItem(
+            name: "TimeProof",
+            actionURL: URL(string: "JetTimeProof://")!,
+            fallbackURL: fallbackURL,
+            showsDisclosureIndicator: false
+        )
+
+        XCTAssertEqual(item.actionURL.absoluteString, "JetTimeProof://")
+        XCTAssertEqual(item.fallbackURL, fallbackURL)
+        XCTAssertFalse(item.showsDisclosureIndicator)
+    }
+
+    func testCompanyAppsUseTimeProofDeepLinkWithStoreFallback() throws {
+        let item = try XCTUnwrap(JetAppItem.companyApps.first { $0.name == "TimeProof" })
+
+        XCTAssertEqual(item.actionURL.absoluteString, "JetTimeProof://")
+        XCTAssertEqual(
+            item.fallbackURL?.absoluteString,
+            "https://apps.apple.com/us/app/jet-camera-timeproof-camera/id6755984821"
+        )
+        XCTAssertFalse(item.showsDisclosureIndicator)
+    }
+
     func testRecommendationsViewSupportsNewStyleConfiguration() {
         _ = JetRecommendationsView()
         _ = JetRecommendationsView(style: .sectionedRows, appearance: .light)

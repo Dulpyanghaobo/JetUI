@@ -206,7 +206,7 @@ public struct JetRecommendationsView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
                                 .background(Capsule().fill(appearance.actionBackgroundColor))
-                        } else {
+                        } else if item.showsDisclosureIndicator {
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(appearance.secondaryTextColor)
@@ -240,7 +240,10 @@ public struct JetRecommendationsView: View {
     private func handleTap(_ item: JetAppItem) {
         onAppTap?(item)
         #if canImport(UIKit)
-        UIApplication.shared.open(item.actionURL)
+        UIApplication.shared.open(item.actionURL) { success in
+            guard !success, let fallbackURL = item.fallbackURL else { return }
+            UIApplication.shared.open(fallbackURL)
+        }
         #endif
     }
 }

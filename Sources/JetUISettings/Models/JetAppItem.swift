@@ -16,6 +16,8 @@ public struct JetAppItem: Identifiable, Hashable {
     public let iconURL: URL? // 支持网络图片配置
     public let localIconName: String? // 支持本地图片（如果图片打包在库里）
     public let actionURL: URL // 点击跳转的链接 (DeepLink 或 AppStore)
+    public let fallbackURL: URL? // DeepLink 打不开时的兜底链接
+    public let showsDisclosureIndicator: Bool
     
     // 初始化方法
     public init(
@@ -24,7 +26,9 @@ public struct JetAppItem: Identifiable, Hashable {
         actionTitle: String? = nil,
         iconURL: URL? = nil,
         localIconName: String? = nil,
-        actionURL: URL
+        actionURL: URL,
+        fallbackURL: URL? = nil,
+        showsDisclosureIndicator: Bool = true
     ) {
         self.name = name
         self.subtitle = subtitle
@@ -32,5 +36,7 @@ public struct JetAppItem: Identifiable, Hashable {
         self.iconURL = iconURL
         self.localIconName = localIconName
         self.actionURL = actionURL
+        self.fallbackURL = fallbackURL
+        self.showsDisclosureIndicator = showsDisclosureIndicator
     }
 }
