@@ -55,7 +55,7 @@ import JetUI
 - ✅ **服务条款** - 打开 URL
 - ✅ **隐私政策** - 打开 URL
 - ✅ **反馈邮件** - 自动附带设备和版本信息
-- ✅ **应用推荐** - `JetRecommendationsView`（底部）
+- ✅ **应用推荐** - `JetRecommendationsView`（底部，支持横向图标与纵向设置行）
 - ✅ **成功/失败弹窗** - 恢复购买结果提示
 
 ## JetAppConfig 参数说明
@@ -118,6 +118,22 @@ JetSettingsView(
 | `JetSettingItem` | 设置项数据 |
 | `JetSettingIcon` | 图标类型 |
 | `JetSettingsActions` | 工具方法 |
+
+### 推荐应用样式
+
+```swift
+JetRecommendationsView(
+    style: .sectionedRows,
+    appearance: .light
+)
+
+JetRecommendationsView(
+    style: .iconCarousel,
+    appearance: .dark
+)
+```
+
+`JetRecommendationsView()` 默认使用 `.automatic`：浅色环境显示纵向设置行，深色环境显示横向图标推荐。需要更细的视觉控制时，可通过 `JetRecommendationsAppearance` 覆盖标题、容器、行、分割线、文字和圆角颜色。
 
 ### 工具类
 

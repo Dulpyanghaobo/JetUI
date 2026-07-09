@@ -120,7 +120,7 @@ public struct JetSimpleSettingsView: View {
                 
                 // Recommendations
                 Section {
-                    JetRecommendationsView()
+                    JetRecommendationsView(style: .iconCarousel, appearance: .dark)
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
@@ -175,7 +175,7 @@ public struct JetSimpleSettingsView: View {
                 .padding(.horizontal, 20)
                 
                 // Recommendations
-                JetRecommendationsView()
+                JetRecommendationsView(style: .sectionedRows, appearance: .light)
                     .padding(.horizontal, 20)
             }
         }
@@ -208,8 +208,8 @@ public struct JetSimpleSettingsView: View {
                 }
             }
             
-            Section(header: Text("App Recommendations")) {
-                JetRecommendationsView()
+            Section {
+                JetRecommendationsView(style: .sectionedRows, appearance: .light)
             }
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
