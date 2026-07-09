@@ -43,9 +43,9 @@ extension AuthTarget {
     public static var configuration: APIConfiguration?
 }
 
-// MARK: - TargetType
+// MARK: - JetTargetType
 
-extension AuthTarget: TargetType {
+extension AuthTarget: JetTargetType {
     
     public var baseURL: URL {
         guard let config = AuthTarget.configuration else {
@@ -73,7 +73,7 @@ extension AuthTarget: TargetType {
         }
     }
     
-    public var method: Moya.Method {
+    public var method: JetMoya.Method {
         switch self {
         case .userInfo, .subscriptionStatus:
             return .get
@@ -86,7 +86,7 @@ extension AuthTarget: TargetType {
         }
     }
     
-    public var task: NetworkTask {
+    public var task: JetNetworkTask {
         switch self {
         case .loginGuest(let deviceId, let osVersion, let fcmToken, let source):
             var params: [String: Any] = [
@@ -97,7 +97,7 @@ extension AuthTarget: TargetType {
             if let token = fcmToken {
                 params["fcm_token"] = token
             }
-            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
+            return .requestParameters(parameters: params, encoding: JetJSONEncoding.default)
             
         case .appleBind(let idToken, let nonce, let osVersion, let fcmToken):
             var params: [String: Any] = [
@@ -108,12 +108,12 @@ extension AuthTarget: TargetType {
             if let token = fcmToken {
                 params["fcm_token"] = token
             }
-            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
+            return .requestParameters(parameters: params, encoding: JetJSONEncoding.default)
             
         case .logout(let refreshToken):
             return .requestParameters(
                 parameters: ["refresh_token": refreshToken],
-                encoding: JSONEncoding.default
+                encoding: JetJSONEncoding.default
             )
             
         case .bindSubscription(let signedPayLoad, let storeKitType, let usageType):
@@ -123,7 +123,7 @@ extension AuthTarget: TargetType {
                     "storekit_type": storeKitType,
                     "usage_type": usageType
                 ],
-                encoding: JSONEncoding.default
+                encoding: JetJSONEncoding.default
             )
             
         case .userInfo, .subscriptionStatus, .deleteAccount:

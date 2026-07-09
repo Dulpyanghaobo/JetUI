@@ -10,7 +10,7 @@ import JetUICore
 
 // MARK: - Target Abstractions
 
-public enum Moya {
+public enum JetMoya {
     public enum Method: String {
         case get = "GET"
         case post = "POST"
@@ -20,27 +20,27 @@ public enum Moya {
     }
 }
 
-public protocol TargetType {
+public protocol JetTargetType {
     var baseURL: URL { get }
     var path: String { get }
-    var method: Moya.Method { get }
-    var task: NetworkTask { get }
+    var method: JetMoya.Method { get }
+    var task: JetNetworkTask { get }
     var headers: [String: String]? { get }
     var sampleData: Data { get }
 }
 
-public enum NetworkTask {
+public enum JetNetworkTask {
     case requestPlain
     case requestData(Data)
-    case requestParameters(parameters: [String: Any], encoding: ParameterEncoding)
+    case requestParameters(parameters: [String: Any], encoding: JetParameterEncoding)
 }
 
-public protocol ParameterEncoding {
+public protocol JetParameterEncoding {
     func encode(_ request: URLRequest, parameters: [String: Any]) throws -> URLRequest
 }
 
-public struct JSONEncoding: ParameterEncoding {
-    public static let `default` = JSONEncoding()
+public struct JetJSONEncoding: JetParameterEncoding {
+    public static let `default` = JetJSONEncoding()
 
     public init() {}
 
@@ -81,7 +81,7 @@ public final class NetworkCore {
 
     /// 通用请求方法（支持任何 TargetType）
     public func request<T: Decodable>(
-        _ target: any TargetType,
+        _ target: any JetTargetType,
         _ type: T.Type = T.self
     ) async throws -> T {
         let response = try await perform(target)
@@ -90,7 +90,7 @@ public final class NetworkCore {
 
     /// API 请求方法，自动处理 APIResponse 包装和错误
     public func api<T: Decodable>(
-        _ target: any TargetType,
+        _ target: any JetTargetType,
         _ type: T.Type = T.self,
         skipAuthRetry: Bool = false
     ) async throws -> T? {
@@ -119,7 +119,7 @@ public final class NetworkCore {
         }
     }
 
-    private func perform(_ target: any TargetType) async throws -> NetworkResponse {
+    private func perform(_ target: any JetTargetType) async throws -> NetworkResponse {
         let request = try makeRequest(for: target)
         logRequest(request, target: target)
 
@@ -143,7 +143,7 @@ public final class NetworkCore {
         }
     }
 
-    private func makeRequest(for target: any TargetType) throws -> URLRequest {
+    private func makeRequest(for target: any JetTargetType) throws -> URLRequest {
         let url = target.baseURL.appendingPathComponent(target.path.trimmingCharacters(in: CharacterSet(charactersIn: "/")))
         var request = URLRequest(url: url)
         request.httpMethod = target.method.rawValue
@@ -162,7 +162,7 @@ public final class NetworkCore {
         }
     }
 
-    private func logRequest(_ request: URLRequest, target: any TargetType) {
+    private func logRequest(_ request: URLRequest, target: any JetTargetType) {
         CSLogger.info("🚀 \(request.httpMethod ?? "") \(request.url?.absoluteString ?? target.path)", category: .network)
         if let headers = request.allHTTPHeaderFields {
             CSLogger.debug("📋 Headers: \(headers)", category: .network)
@@ -172,7 +172,7 @@ public final class NetworkCore {
         }
     }
 
-    private func logResponse(data: Data, response: HTTPURLResponse, target: any TargetType) {
+    private func logResponse(data: Data, response: HTTPURLResponse, target: any JetTargetType) {
         CSLogger.debug("✅ [\(response.statusCode)] \(response.url?.absoluteString ?? target.path)", category: .network)
         if let bodyString = String(data: data, encoding: .utf8) {
             CSLogger.debug("📨 Response Body: \(bodyString)", category: .network)

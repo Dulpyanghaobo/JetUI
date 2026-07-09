@@ -110,9 +110,9 @@ extension AccountTarget {
     private static let defaultBaseURL = URL(string: "https://waterappbackend-743086285375.us-central1.run.app")!
 }
 
-// MARK: - TargetType Conformance
+// MARK: - JetTargetType Conformance
 
-extension AccountTarget: TargetType {
+extension AccountTarget: JetTargetType {
     
     public var baseURL: URL {
         // 如果配置了自定义 baseURL，使用自定义的；否则使用默认的
@@ -139,7 +139,7 @@ extension AccountTarget: TargetType {
         }
     }
     
-    public var method: Moya.Method {
+    public var method: JetMoya.Method {
         switch self {
         case .loginGuest, .appleBind, .logout, .bindSubscription:
             return .post
@@ -150,7 +150,7 @@ extension AccountTarget: TargetType {
         }
     }
     
-    public var task: NetworkTask {
+    public var task: JetNetworkTask {
         switch self {
         case .loginGuest(let deviceId, let osVersion, let fcmToken, let source, let deviceInfo):
             let params: [String: Any] = [
@@ -162,7 +162,7 @@ extension AccountTarget: TargetType {
                 "fcmToken": fcmToken ?? "",
                 "source": source
             ]
-            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
+            return .requestParameters(parameters: params, encoding: JetJSONEncoding.default)
             
         case .appleBind(let idToken, let nonce, let osVersion, let fcmToken, let deviceInfo):
             let params: [String: Any] = [
@@ -175,13 +175,13 @@ extension AccountTarget: TargetType {
                 "platform": deviceInfo.platform,
                 "fcmToken": fcmToken ?? ""
             ]
-            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
+            return .requestParameters(parameters: params, encoding: JetJSONEncoding.default)
             
         case .logout(let refreshToken):
             let params: [String: Any] = [
                 "refreshToken": refreshToken
             ]
-            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
+            return .requestParameters(parameters: params, encoding: JetJSONEncoding.default)
             
         case .bindSubscription(let payLoad, let storeKitType, let usageType):
             let params: [String: Any] = [
@@ -189,7 +189,7 @@ extension AccountTarget: TargetType {
                 "storeKitType": storeKitType,
                 "subscriptionUsageType": usageType
             ]
-            return .requestParameters(parameters: params, encoding: JSONEncoding.default)
+            return .requestParameters(parameters: params, encoding: JetJSONEncoding.default)
             
         case .deleteAccount, .userInfo, .subscriptionStatus:
             return .requestPlain
