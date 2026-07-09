@@ -17,7 +17,9 @@ extension JetAppItem {
         JetAppItem(
             name: "TimeProof",
             localIconName: "TimeProof_icon",
-            actionURL: URL(string: "https://apps.apple.com/app/timeproof-id")!
+            actionURL: URL(string: "JetTimeProof://")!,
+            fallbackURL: URL(string: "https://apps.apple.com/us/app/jet-camera-timeproof-camera/id6755984821")!,
+            showsDisclosureIndicator: false
         ),
         JetAppItem(
             name: "JetFax",

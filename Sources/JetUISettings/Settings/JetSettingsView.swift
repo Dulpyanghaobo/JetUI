@@ -68,13 +68,19 @@ public struct JetSettingsView<Configuration: JetSettingsConfigurationProtocol>: 
     // MARK: - Dark Card Content (TimeProof/WatermarkCamera Style)
     private var darkCardContent: some View {
         VStack(spacing: 24) {
+            // Top custom content
+            if let topContentView = configuration.topContentView {
+                topContentView
+                    .padding(.top, 24)
+            }
+
             // Membership Card
             if configuration.membershipCard.isEnabled {
                 JetMembershipCardView(
                     configuration: configuration.membershipCard,
                     theme: configuration.theme
                 )
-                .padding(.top, 24)
+                .padding(.top, configuration.topContentView == nil ? 24 : 0)
             }
             
             List {
@@ -122,6 +128,12 @@ public struct JetSettingsView<Configuration: JetSettingsConfigurationProtocol>: 
                         .padding(.top, 24)
                         .padding(.horizontal, 20)
                     
+                    // Top custom content
+                    if let topContentView = configuration.topContentView {
+                        topContentView
+                            .padding(.horizontal, 20)
+                    }
+
                     // Membership Card
                     if configuration.membershipCard.isEnabled {
                         JetMembershipCardView(
@@ -195,6 +207,13 @@ public struct JetSettingsView<Configuration: JetSettingsConfigurationProtocol>: 
     // MARK: - Standard Content (DocumentScan Style)
     private var standardContent: some View {
         List {
+            // Top custom content
+            if let topContentView = configuration.topContentView {
+                Section {
+                    topContentView
+                }
+            }
+
             // Membership Card
             if configuration.membershipCard.isEnabled {
                 Section {
@@ -230,6 +249,13 @@ public struct JetSettingsView<Configuration: JetSettingsConfigurationProtocol>: 
     // MARK: - Custom Content
     private var customContent: some View {
         List {
+            // Top custom content
+            if let topContentView = configuration.topContentView {
+                Section {
+                    topContentView
+                }
+            }
+
             // Membership Card
             if configuration.membershipCard.isEnabled {
                 Section {
@@ -387,6 +413,7 @@ public extension JetSettingsView where Configuration == JetSettingsConfiguration
         rowStyle: JetSettingRowStyle = .standard,
         navigationStyle: JetSettingsNavigationStyle = .doneButton,
         membershipCard: JetMembershipCardConfiguration = .disabled,
+        topContentView: AnyView? = nil,
         sections: [JetSettingSection],
         footer: JetSettingsFooterConfiguration = .disabled,
         customBottomView: AnyView? = nil,
@@ -398,6 +425,7 @@ public extension JetSettingsView where Configuration == JetSettingsConfiguration
             rowStyle: rowStyle,
             navigationStyle: navigationStyle,
             membershipCard: membershipCard,
+            topContentView: topContentView,
             sections: sections,
             footer: footer,
             customBottomView: customBottomView,
@@ -405,87 +433,3 @@ public extension JetSettingsView where Configuration == JetSettingsConfiguration
         )
     }
 }
-
-// MARK: - Preview
-#if DEBUG
-struct JetSettingsView_Previews: PreviewProvider {
-    static var previews: some View {
-        // Dark Card Style Preview
-        JetSettingsView(
-            title: "Settings",
-            theme: .dark,
-            rowStyle: .darkCard,
-            navigationStyle: .dismissButton,
-            sections: [
-                JetSettingSection(
-                    header: "Settings",
-                    items: [
-                        JetSettingItem(icon: .system("creditcard"), title: "Restore Purchase", action: {}),
-                        JetSettingItem(icon: .system("square.and.arrow.up"), title: "Share to Friends", action: {}),
-                        JetSettingItem(icon: .system("star.fill"), title: "Rate Us", action: {}),
-                        JetSettingItem(icon: .system("doc.text"), title: "Terms of Use", action: {}),
-                        JetSettingItem(icon: .system("lock.shield"), title: "Privacy Policy", action: {}),
-                        JetSettingItem(icon: .system("envelope"), title: "Feedback", action: {})
-                    ]
-                )
-            ]
-        )
-        .previewDisplayName("Dark Card Style")
-        
-        // Light Card Style Preview
-        JetSettingsView(
-            title: "Settings",
-            theme: .light,
-            rowStyle: .lightCard,
-            navigationStyle: .circleCloseButton,
-            membershipCard: JetMembershipCardConfiguration(
-                isEnabled: true,
-                style: .gradient(
-                    colors: [Color.purple, Color.orange],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                title: "Awake Pro",
-                subtitle: "Upgrade for all features",
-                onTap: {}
-            ),
-            sections: [
-                JetSettingSection(
-                    items: [
-                        JetSettingItem(icon: .system("questionmark.app.fill"), title: "Help & Support", action: {}),
-                        JetSettingItem(icon: .system("sparkles"), title: "What's New", detail: "v1.0.2", action: {}),
-                        JetSettingItem(icon: .system("star.fill"), title: "Write a Review", action: {})
-                    ]
-                )
-            ],
-            footer: .fromBundle(appName: "Awake", companyName: "unorderly GmbH")
-        )
-        .previewDisplayName("Light Card Style")
-        
-        // Standard Style Preview
-        JetSettingsView(
-            title: "Settings",
-            theme: .standard,
-            rowStyle: .standard,
-            navigationStyle: .doneButton,
-            membershipCard: JetMembershipCardConfiguration(
-                isEnabled: true,
-                style: .solid(Color(.secondarySystemBackground)),
-                title: "Subscription Membership",
-                subtitle: "",
-                onTap: {}
-            ),
-            sections: [
-                JetSettingSection(
-                    items: [
-                        JetSettingItem(icon: .image("icon_support"), title: "Help & Support", action: {}),
-                        JetSettingItem(icon: .image("icon_privacy"), title: "Privacy Policy", action: {}),
-                        JetSettingItem(icon: .image("icon_terms"), title: "Terms of Use", action: {})
-                    ]
-                )
-            ]
-        )
-        .previewDisplayName("Standard Style")
-    }
-}
-#endif

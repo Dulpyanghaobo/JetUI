@@ -50,9 +50,10 @@ public struct JetSettingItemRow: View {
         HStack(spacing: 16) {
             iconView(size: 40)
             
-            Text(item.title)
-                .foregroundColor(theme.primaryTextColor)
-                .font(.system(size: 16, weight: .medium))
+            titleStack(
+                titleFont: .system(size: 16, weight: .medium),
+                subtitleFont: .system(size: 13, weight: .regular)
+            )
             
             Spacer()
             
@@ -69,7 +70,7 @@ public struct JetSettingItemRow: View {
             }
         }
         .padding(.horizontal, 16)
-        .frame(height: 72)
+        .frame(minHeight: 72)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white.opacity(0.05))
@@ -85,10 +86,11 @@ public struct JetSettingItemRow: View {
         HStack(spacing: 12) {
             iconView(size: 36, showBackground: true)
             
-            Text(item.title)
-                .foregroundColor(theme.primaryTextColor)
-                .font(.system(size: 18, weight: .medium))
-                .frame(maxWidth: .infinity, alignment: .leading)
+            titleStack(
+                titleFont: .system(size: 18, weight: .medium),
+                subtitleFont: .system(size: 13, weight: .regular)
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
             
             if let detail = item.detail {
                 Text(detail)
@@ -112,9 +114,10 @@ public struct JetSettingItemRow: View {
         HStack {
             iconView(size: 24)
             
-            Text(item.title)
-                .font(.system(size: 17))
-                .foregroundColor(theme.primaryTextColor)
+            titleStack(
+                titleFont: .system(size: 17),
+                subtitleFont: .system(size: 13)
+            )
             
             Spacer()
             
@@ -140,9 +143,10 @@ public struct JetSettingItemRow: View {
         HStack(spacing: 16) {
             iconView(size: 24)
             
-            Text(item.title)
-                .foregroundColor(theme.primaryTextColor)
-                .font(.system(size: 16, weight: .medium))
+            titleStack(
+                titleFont: .system(size: 16, weight: .medium),
+                subtitleFont: .system(size: 13, weight: .regular)
+            )
             
             Spacer()
             
@@ -158,7 +162,7 @@ public struct JetSettingItemRow: View {
             }
         }
         .padding(.horizontal, 16)
-        .frame(height: rowHeight)
+        .frame(minHeight: rowHeight)
         .background(
             RoundedRectangle(cornerRadius: cornerRadius)
                 .fill(backgroundColor)
@@ -171,6 +175,24 @@ public struct JetSettingItemRow: View {
                     }
                 )
         )
+    }
+
+    private func titleStack(titleFont: Font, subtitleFont: Font) -> some View {
+        VStack(alignment: .leading, spacing: item.subtitle == nil ? 0 : 3) {
+            Text(item.title)
+                .font(titleFont)
+                .foregroundColor(theme.primaryTextColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+
+            if let subtitle = item.subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(subtitleFont)
+                    .foregroundColor(theme.secondaryTextColor)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
     
     // MARK: - Icon View

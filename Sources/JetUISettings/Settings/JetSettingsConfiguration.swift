@@ -128,6 +128,8 @@ public struct JetSettingItem: Identifiable {
     public let icon: JetSettingIcon
     /// 标题
     public let title: String
+    /// 二级说明文字（可选）
+    public let subtitle: String?
     /// 右侧详情文字（可选）
     public let detail: String?
     /// 是否显示箭头
@@ -138,12 +140,14 @@ public struct JetSettingItem: Identifiable {
     public init(
         icon: JetSettingIcon = .none,
         title: String,
+        subtitle: String? = nil,
         detail: String? = nil,
         showChevron: Bool = true,
         action: @escaping () -> Void
     ) {
         self.icon = icon
         self.title = title
+        self.subtitle = subtitle
         self.detail = detail
         self.showChevron = showChevron
         self.action = action
@@ -283,6 +287,8 @@ public protocol JetSettingsConfigurationProtocol {
     var navigationStyle: JetSettingsNavigationStyle { get }
     /// 会员卡片配置
     var membershipCard: JetMembershipCardConfiguration { get }
+    /// 顶部自定义内容（例如产品信息卡）
+    var topContentView: AnyView? { get }
     /// 设置分组列表
     var sections: [JetSettingSection] { get }
     /// 底部信息配置
@@ -300,6 +306,7 @@ public extension JetSettingsConfigurationProtocol {
     var rowStyle: JetSettingRowStyle { .standard }
     var navigationStyle: JetSettingsNavigationStyle { .doneButton }
     var membershipCard: JetMembershipCardConfiguration { .disabled }
+    var topContentView: AnyView? { nil }
     var footer: JetSettingsFooterConfiguration { .disabled }
     var customBottomView: AnyView? { nil }
 }
@@ -312,6 +319,7 @@ public struct JetSettingsConfiguration: JetSettingsConfigurationProtocol {
     public var rowStyle: JetSettingRowStyle
     public var navigationStyle: JetSettingsNavigationStyle
     public var membershipCard: JetMembershipCardConfiguration
+    public var topContentView: AnyView?
     public var sections: [JetSettingSection]
     public var footer: JetSettingsFooterConfiguration
     public var customBottomView: AnyView?
@@ -323,6 +331,7 @@ public struct JetSettingsConfiguration: JetSettingsConfigurationProtocol {
         rowStyle: JetSettingRowStyle = .standard,
         navigationStyle: JetSettingsNavigationStyle = .doneButton,
         membershipCard: JetMembershipCardConfiguration = .disabled,
+        topContentView: AnyView? = nil,
         sections: [JetSettingSection] = [],
         footer: JetSettingsFooterConfiguration = .disabled,
         customBottomView: AnyView? = nil,
@@ -333,6 +342,7 @@ public struct JetSettingsConfiguration: JetSettingsConfigurationProtocol {
         self.rowStyle = rowStyle
         self.navigationStyle = navigationStyle
         self.membershipCard = membershipCard
+        self.topContentView = topContentView
         self.sections = sections
         self.footer = footer
         self.customBottomView = customBottomView
