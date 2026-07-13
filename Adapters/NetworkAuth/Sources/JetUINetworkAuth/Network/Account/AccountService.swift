@@ -124,21 +124,21 @@ public final class DefaultAccountService: AccountServiceProtocol {
                 storeKitType: storeKitType,
                 usageType: usageType
             ),
-            EmptyDecodable.self
+            String.self
         )
     }
     
     public func logout(refreshToken: String) async throws {
         _ = try await NetworkCore.shared.api(
             AccountTarget.logout(refreshToken: refreshToken),
-            EmptyDecodable.self
+            String.self
         )
     }
     
     public func deleteAccount() async throws {
         _ = try await NetworkCore.shared.api(
             AccountTarget.deleteAccount,
-            EmptyDecodable.self
+            String.self
         )
     }
 }

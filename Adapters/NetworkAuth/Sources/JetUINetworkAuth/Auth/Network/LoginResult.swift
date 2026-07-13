@@ -14,7 +14,7 @@ public struct LoginResult: Codable {
     public var refreshToken: String?
     public var accessToken: String?
     
-    public var userId: String?
+    public var userId: Int?
     public var appleBound: Bool?
     public var userInfo: UserInfo?
 }

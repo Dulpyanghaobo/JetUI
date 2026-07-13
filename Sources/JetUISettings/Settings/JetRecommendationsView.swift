@@ -202,10 +202,18 @@ public struct JetRecommendationsView: View {
                         if let actionTitle = item.actionTitle, !actionTitle.isEmpty {
                             Text(actionTitle)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundColor(appearance.actionTextColor)
+                                .foregroundColor(
+                                    item.actionTextColorHex.map(Color.init(jetRecommendationsHex:))
+                                        ?? appearance.actionTextColor
+                                )
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(Capsule().fill(appearance.actionBackgroundColor))
+                                .background(
+                                    Capsule().fill(
+                                        item.actionBackgroundColorHex.map(Color.init(jetRecommendationsHex:))
+                                            ?? appearance.actionBackgroundColor
+                                    )
+                                )
                         } else if item.showsDisclosureIndicator {
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 13, weight: .semibold))
@@ -239,12 +247,7 @@ public struct JetRecommendationsView: View {
 
     private func handleTap(_ item: JetAppItem) {
         onAppTap?(item)
-        #if canImport(UIKit)
-        UIApplication.shared.open(item.actionURL) { success in
-            guard !success, let fallbackURL = item.fallbackURL else { return }
-            UIApplication.shared.open(fallbackURL)
-        }
-        #endif
+        JetAppLauncher.open(item)
     }
 }
 
@@ -333,6 +336,16 @@ private extension JetRecommendationsAppearance {
 }
 
 private extension Color {
+    init(jetRecommendationsHex hex: UInt32) {
+        self.init(
+            .sRGB,
+            red: Double((hex >> 16) & 0xFF) / 255,
+            green: Double((hex >> 8) & 0xFF) / 255,
+            blue: Double(hex & 0xFF) / 255,
+            opacity: 1
+        )
+    }
+
     static var jetSecondaryGroupedBackground: Color {
         #if canImport(UIKit)
         Color(UIColor.secondarySystemGroupedBackground)

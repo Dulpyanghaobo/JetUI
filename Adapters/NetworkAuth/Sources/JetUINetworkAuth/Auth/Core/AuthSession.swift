@@ -102,7 +102,7 @@ public final class AuthSession: AuthSessionProvider {
     public func save(_ result: LoginResult) {
         accessToken = result.accessToken ?? result.token
         refreshToken = result.refreshToken
-        userId = result.userId ?? result.userInfo?.id.map(String.init)
+        userId = result.userId.map(String.init) ?? result.userInfo?.id.map(String.init)
         
         CSLogger.info("AuthSession: Tokens saved", category: .auth)
     }

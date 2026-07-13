@@ -149,17 +149,13 @@ public struct JetSettingsActions {
     ///   - deepLink: 应用的深度链接
     ///   - appStoreURL: App Store 链接
     public static func openAppOrStore(deepLink: String, appStoreURL: String) {
-        #if canImport(UIKit)
-        if let deepLinkURL = URL(string: deepLink) {
-            UIApplication.shared.open(deepLinkURL) { success in
-                if !success {
-                    openURL(appStoreURL)
-                }
-            }
-        } else {
-            openURL(appStoreURL)
+        guard let appStoreURL = URL(string: appStoreURL) else { return }
+        guard let deepLinkURL = URL(string: deepLink) else {
+            JetAppLauncher.open(primaryURL: appStoreURL)
+            return
         }
-        #endif
+
+        JetAppLauncher.open(primaryURL: deepLinkURL, fallbackURL: appStoreURL)
     }
 }
 

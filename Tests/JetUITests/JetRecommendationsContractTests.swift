@@ -10,6 +10,7 @@ final class JetRecommendationsContractTests: XCTestCase {
 
         XCTAssertNil(item.subtitle)
         XCTAssertNil(item.actionTitle)
+        XCTAssertNil(item.product)
     }
 
     func testAppItemStoresRecommendationMetadata() {
@@ -38,15 +39,51 @@ final class JetRecommendationsContractTests: XCTestCase {
         XCTAssertFalse(item.showsDisclosureIndicator)
     }
 
-    func testCompanyAppsUseTimeProofDeepLinkWithStoreFallback() throws {
-        let item = try XCTUnwrap(JetAppItem.companyApps.first { $0.name == "TimeProof" })
-
-        XCTAssertEqual(item.actionURL.absoluteString, "JetTimeProof://")
+    func testCompanyAppsUseDeepLinksWithStoreFallbacksAndOpenButtons() throws {
+        let timeStamp = try XCTUnwrap(JetAppItem.companyApps.first { $0.name == "TimeStamp" })
+        XCTAssertEqual(timeStamp.actionURL.absoluteString, "JetCamera://")
         XCTAssertEqual(
-            item.fallbackURL?.absoluteString,
+            timeStamp.fallbackURL?.absoluteString,
+            "https://apps.apple.com/us/app/stampcam-photo-video/id6747913178"
+        )
+        XCTAssertEqual(timeStamp.actionTitle, "Open")
+        XCTAssertEqual(timeStamp.product, .timeStamp)
+        XCTAssertEqual(timeStamp.actionBackgroundColorHex, 0xFFA800)
+        XCTAssertEqual(timeStamp.actionTextColorHex, 0x000000)
+
+        let timeProof = try XCTUnwrap(JetAppItem.companyApps.first { $0.name == "TimeProof" })
+        XCTAssertEqual(timeProof.actionURL.absoluteString, "JetTimeProof://")
+        XCTAssertEqual(
+            timeProof.fallbackURL?.absoluteString,
             "https://apps.apple.com/us/app/jet-camera-timeproof-camera/id6755984821"
         )
-        XCTAssertFalse(item.showsDisclosureIndicator)
+        XCTAssertEqual(timeProof.actionTitle, "Open")
+        XCTAssertEqual(timeProof.product, .timeProof)
+        XCTAssertEqual(timeProof.actionBackgroundColorHex, 0x2786D5)
+
+        let jetFax = try XCTUnwrap(JetAppItem.companyApps.first { $0.name == "JetFax" })
+        XCTAssertEqual(jetFax.actionURL.absoluteString, "jetfax://")
+        XCTAssertEqual(
+            jetFax.fallbackURL?.absoluteString,
+            "https://apps.apple.com/us/app/jet-fax-fax-from-iphone-free/id6752217283"
+        )
+        XCTAssertEqual(jetFax.actionTitle, "Open")
+        XCTAssertEqual(jetFax.product, .jetFax)
+        XCTAssertEqual(jetFax.actionBackgroundColorHex, 0x0A7AF5)
+
+        for item in [timeStamp, timeProof, jetFax] {
+            XCTAssertFalse(item.showsDisclosureIndicator)
+        }
+    }
+
+    func testProductCatalogNamesJetScanAndExcludesTheCurrentProduct() {
+        XCTAssertEqual(JetProduct.jetScan.displayName, "JetScan")
+        XCTAssertEqual(JetAppLauncher.item(for: .jetFax)?.name, "JetFax")
+        XCTAssertNil(JetAppLauncher.item(for: .jetScan))
+
+        let recommendations = JetAppLauncher.recommendations(excluding: .jetScan)
+        XCTAssertFalse(recommendations.contains { $0.product == .jetScan })
+        XCTAssertEqual(recommendations.map(\.product).compactMap { $0 }.count, 3)
     }
 
     func testRecommendationsViewSupportsNewStyleConfiguration() {
