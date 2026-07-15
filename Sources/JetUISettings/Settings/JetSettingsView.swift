@@ -14,21 +14,35 @@ public struct JetSettingsView<Configuration: JetSettingsConfigurationProtocol>: 
     @Environment(\.dismiss) private var dismiss
     
     let configuration: Configuration
+    private let wrapsInNavigationStack: Bool
     
-    public init(configuration: Configuration) {
+    public init(
+        configuration: Configuration,
+        wrapsInNavigationStack: Bool = true
+    ) {
         self.configuration = configuration
+        self.wrapsInNavigationStack = wrapsInNavigationStack
     }
     
+    @ViewBuilder
     public var body: some View {
-        NavigationStack {
-            contentView
-                .background(configuration.theme.backgroundColor)
-                .toolbar {
-                    toolbarContent
-                }
-                .navigationTitle(navigationTitleText)
-                .navigationBarTitleDisplayMode(navigationBarDisplayMode)
+        if wrapsInNavigationStack {
+            NavigationStack {
+                configuredContent
+            }
+        } else {
+            configuredContent
         }
+    }
+
+    private var configuredContent: some View {
+        contentView
+            .background(configuration.theme.backgroundColor)
+            .toolbar {
+                toolbarContent
+            }
+            .navigationTitle(navigationTitleText)
+            .navigationBarTitleDisplayMode(navigationBarDisplayMode)
     }
     
     // MARK: - Content View
@@ -417,6 +431,7 @@ public extension JetSettingsView where Configuration == JetSettingsConfiguration
         sections: [JetSettingSection],
         footer: JetSettingsFooterConfiguration = .disabled,
         customBottomView: AnyView? = nil,
+        wrapsInNavigationStack: Bool = true,
         onDismiss: @escaping () -> Void = {}
     ) {
         self.configuration = JetSettingsConfiguration(
@@ -431,5 +446,6 @@ public extension JetSettingsView where Configuration == JetSettingsConfiguration
             customBottomView: customBottomView,
             onDismiss: onDismiss
         )
+        self.wrapsInNavigationStack = wrapsInNavigationStack
     }
 }
