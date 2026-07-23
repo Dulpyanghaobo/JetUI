@@ -163,20 +163,21 @@ public final class NetworkCore {
     }
 
     private func logRequest(_ request: URLRequest, target: any JetTargetType) {
-        CSLogger.info("🚀 \(request.httpMethod ?? "") \(request.url?.absoluteString ?? target.path)", category: .network)
+        CSLogger.info("🚀 \(request.httpMethod ?? "") \(request.url?.path ?? target.path)", category: .network)
         if let headers = request.allHTTPHeaderFields {
-            CSLogger.debug("📋 Headers: \(headers)", category: .network)
+            let safeHeaders = headers.mapValues { _ in "<redacted>" }
+            CSLogger.debug("📋 Headers: \(safeHeaders)", category: .network)
         }
-        if let body = request.httpBody, let bodyString = String(data: body, encoding: .utf8) {
-            CSLogger.debug("📦 Body: \(bodyString)", category: .network)
+        if let body = request.httpBody {
+            CSLogger.debug("📦 Request body: \(body.count) bytes", category: .network)
         }
     }
 
     private func logResponse(data: Data, response: HTTPURLResponse, target: any JetTargetType) {
-        CSLogger.debug("✅ [\(response.statusCode)] \(response.url?.absoluteString ?? target.path)", category: .network)
-        if let bodyString = String(data: data, encoding: .utf8) {
-            CSLogger.debug("📨 Response Body: \(bodyString)", category: .network)
-        }
+        CSLogger.debug(
+            "✅ [\(response.statusCode)] \(response.url?.path ?? target.path) (\(data.count) bytes)",
+            category: .network
+        )
     }
 }
 
