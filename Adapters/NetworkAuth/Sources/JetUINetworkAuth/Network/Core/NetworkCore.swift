@@ -65,6 +65,29 @@ public protocol AuthSessionProvider: AnyObject {
     var accessToken: String? { get }
 }
 
+// MARK: - Network Logging
+
+public struct NetworkLoggingConfiguration: Sendable {
+    public var includesBodies: Bool
+    public var maximumBodyBytes: Int
+
+    public init(
+        includesBodies: Bool,
+        maximumBodyBytes: Int = 16_384
+    ) {
+        self.includesBodies = includesBodies
+        self.maximumBodyBytes = max(1, maximumBodyBytes)
+    }
+
+    public static var `default`: NetworkLoggingConfiguration {
+        #if DEBUG
+        NetworkLoggingConfiguration(includesBodies: true)
+        #else
+        NetworkLoggingConfiguration(includesBodies: false)
+        #endif
+    }
+}
+
 // MARK: - Network Core
 
 public final class NetworkCore {
@@ -72,6 +95,10 @@ public final class NetworkCore {
 
     /// 认证会话提供者（由宿主 App 注入）
     public weak var authSession: AuthSessionProvider?
+
+    /// Response/request body logging is enabled by default for Debug builds.
+    /// Sensitive JSON fields are recursively redacted before they reach OSLog.
+    public var loggingConfiguration: NetworkLoggingConfiguration = .default
 
     private let session: URLSession
 
@@ -170,14 +197,143 @@ public final class NetworkCore {
         }
         if let body = request.httpBody {
             CSLogger.debug("📦 Request body: \(body.count) bytes", category: .network)
+            if loggingConfiguration.includesBodies {
+                let formattedBody = NetworkLogFormatter.formatBody(
+                    body,
+                    contentType: request.value(forHTTPHeaderField: "Content-Type"),
+                    maximumBytes: loggingConfiguration.maximumBodyBytes
+                )
+                CSLogger.debug(
+                    "📤 Request JSON:\n\(formattedBody)",
+                    category: .network
+                )
+            }
         }
     }
 
     private func logResponse(data: Data, response: HTTPURLResponse, target: any JetTargetType) {
+        let symbol = 200..<300 ~= response.statusCode ? "✅" : "❌"
         CSLogger.debug(
-            "✅ [\(response.statusCode)] \(response.url?.path ?? target.path) (\(data.count) bytes)",
+            "\(symbol) [\(response.statusCode)] \(response.url?.path ?? target.path) (\(data.count) bytes)",
             category: .network
         )
+        if loggingConfiguration.includesBodies {
+            let formattedBody = NetworkLogFormatter.formatBody(
+                data,
+                contentType: response.value(forHTTPHeaderField: "Content-Type"),
+                maximumBytes: loggingConfiguration.maximumBodyBytes
+            )
+            CSLogger.debug(
+                "📥 Response body:\n\(formattedBody)",
+                category: .network
+            )
+        }
+    }
+}
+
+enum NetworkLogFormatter {
+    private static let sensitiveKeys: Set<String> = [
+        "authorization",
+        "cookie",
+        "setcookie",
+        "password",
+        "passwd",
+        "pwd",
+        "token",
+        "accesstoken",
+        "refreshtoken",
+        "idtoken",
+        "sessiontoken",
+        "apikey",
+        "xapikey",
+        "secret",
+        "clientsecret",
+        "credential",
+        "credentials"
+    ]
+
+    static func formatBody(
+        _ data: Data,
+        contentType: String?,
+        maximumBytes: Int
+    ) -> String {
+        guard !data.isEmpty else {
+            return "<empty>"
+        }
+
+        if isJSON(data: data, contentType: contentType),
+           let object = try? JSONSerialization.jsonObject(with: data),
+           JSONSerialization.isValidJSONObject(object),
+           let sanitizedData = try? JSONSerialization.data(
+               withJSONObject: redact(object),
+               options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
+           ) {
+            return boundedText(sanitizedData, maximumBytes: maximumBytes)
+        }
+
+        if isText(contentType: contentType), String(data: data, encoding: .utf8) != nil {
+            return boundedText(data, maximumBytes: maximumBytes)
+        }
+
+        return "<\(data.count) bytes; non-text body omitted>"
+    }
+
+    private static func isJSON(data: Data, contentType: String?) -> Bool {
+        if contentType?.lowercased().contains("json") == true {
+            return true
+        }
+        guard let firstByte = data.first(where: {
+            ![0x09, 0x0A, 0x0D, 0x20].contains($0)
+        }) else {
+            return false
+        }
+        return firstByte == 0x7B || firstByte == 0x5B
+    }
+
+    private static func isText(contentType: String?) -> Bool {
+        guard let contentType = contentType?.lowercased() else {
+            return true
+        }
+        return contentType.hasPrefix("text/")
+            || contentType.contains("xml")
+            || contentType.contains("javascript")
+            || contentType.contains("x-www-form-urlencoded")
+    }
+
+    private static func redact(_ value: Any) -> Any {
+        if let dictionary = value as? [String: Any] {
+            return dictionary.reduce(into: [String: Any]()) { result, entry in
+                if isSensitive(entry.key) {
+                    result[entry.key] = "<redacted>"
+                } else {
+                    result[entry.key] = redact(entry.value)
+                }
+            }
+        }
+        if let array = value as? [Any] {
+            return array.map(redact)
+        }
+        return value
+    }
+
+    private static func isSensitive(_ key: String) -> Bool {
+        let normalized = key
+            .lowercased()
+            .filter { $0.isLetter || $0.isNumber }
+        return sensitiveKeys.contains(normalized)
+            || normalized.hasSuffix("token")
+            || normalized.hasSuffix("password")
+            || normalized.hasSuffix("secret")
+    }
+
+    private static func boundedText(_ data: Data, maximumBytes: Int) -> String {
+        let limit = max(1, maximumBytes)
+        guard data.count > limit else {
+            return String(decoding: data, as: UTF8.self)
+        }
+        let omittedByteCount = data.count - limit
+        let prefix = String(decoding: data.prefix(limit), as: UTF8.self)
+        return "\(prefix)\n… <truncated \(omittedByteCount) bytes>"
     }
 }
 

@@ -25,6 +25,10 @@ let package = Package(
                 .product(name: "JetUICore", package: "JetUI"),
                 "KeychainAccess"
             ]
+        ),
+        .testTarget(
+            name: "JetUINetworkAuthTests",
+            dependencies: ["JetUINetworkAuth"]
         )
     ]
 )
