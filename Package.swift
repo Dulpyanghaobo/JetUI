@@ -35,7 +35,10 @@ let package = Package(
     dependencies: [],
     targets: [
         .target(
-            name: "JetUICore"
+            name: "JetUICore",
+            resources: [
+                .process("Resources/PrivacyInfo.xcprivacy")
+            ]
         ),
         .target(
             name: "JetUIDesign",
@@ -50,6 +53,9 @@ let package = Package(
             name: "JetUIComponents",
             dependencies: [
                 "JetUIDesign"
+            ],
+            resources: [
+                .process("Resources/PrivacyInfo.xcprivacy")
             ]
         ),
         .target(
