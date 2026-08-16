@@ -802,7 +802,7 @@ public struct JetTrialPaywallConfig {
         processingTitle: String = SubL.Button.processing,
         autoRenewalTip: String = SubL.Legal.autoRenewalTip,
         lifetimeTip: String = SubL.Legal.lifetimeTip,
-        savePercentFormat: String = "Save %d%%",
+        savePercentFormat: String = SubL.Price.savePercentFormat,
         privacyPolicyURL: URL = URL(string: "https://example.com/privacy")!,
         privacyPolicyTitle: String = SubL.Legal.privacyPolicy,
         termsURL: URL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!,
@@ -843,7 +843,7 @@ public struct JetTrialPaywallConfig {
         self.processingTitle = content.processingText
         self.autoRenewalTip = SubL.Legal.autoRenewalTip
         self.lifetimeTip = SubL.Legal.lifetimeTip
-        self.savePercentFormat = "Save %d%%"
+        self.savePercentFormat = SubL.Price.savePercentFormat
         self.privacyPolicyURL = content.privacyPolicyURL ?? URL(string: "https://example.com/privacy")!
         self.privacyPolicyTitle = content.privacyText
         self.termsURL = content.termsURL ?? URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!

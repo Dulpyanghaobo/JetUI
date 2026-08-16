@@ -129,13 +129,13 @@ extension Product {
         
         switch period.unit {
         case .day:
-            return period.value == 1 ? "Daily" : "\(period.value) Days"
+            return period.value == 1 ? SubL.Period.daily : SubL.Period.days(period.value)
         case .week:
-            return period.value == 1 ? "Weekly" : "\(period.value) Weeks"
+            return period.value == 1 ? SubL.Period.weekly : SubL.Period.weeks(period.value)
         case .month:
-            return period.value == 1 ? "Monthly" : "\(period.value) Months"
+            return period.value == 1 ? SubL.Period.monthly : SubL.Period.months(period.value)
         case .year:
-            return period.value == 1 ? "Yearly" : "\(period.value) Years"
+            return period.value == 1 ? SubL.Period.yearly : SubL.Period.years(period.value)
         @unknown default:
             return nil
         }
@@ -154,13 +154,13 @@ extension Product {
         let period = offer.period
         switch period.unit {
         case .day:
-            return "\(period.value) Day Free Trial"
+            return SubL.Trial.freeTrial(SubL.Period.days(period.value))
         case .week:
-            return "\(period.value) Week Free Trial"
+            return SubL.Trial.freeTrial(SubL.Period.weeks(period.value))
         case .month:
-            return "\(period.value) Month Free Trial"
+            return SubL.Trial.freeTrial(SubL.Period.months(period.value))
         case .year:
-            return "\(period.value) Year Free Trial"
+            return SubL.Trial.freeTrial(SubL.Period.years(period.value))
         @unknown default:
             return nil
         }

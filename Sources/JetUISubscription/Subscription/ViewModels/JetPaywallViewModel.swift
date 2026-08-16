@@ -288,10 +288,22 @@ public final class JetPaywallViewModel: ObservableObject {
         // 生成续订说明
         if subline == nil, let period = product.subscription?.subscriptionPeriod {
             switch period.unit {
-            case .year: subline = "\(product.displayPrice)/year"
-            case .month: subline = "\(product.displayPrice)/month"
-            case .week: subline = "\(product.displayPrice)/week"
-            case .day: subline = "\(product.displayPrice)/\(period.value) days"
+            case .year:
+                subline = period.value == 1
+                    ? SubL.Price.perYear(product.displayPrice)
+                    : SubL.Price.perPeriod(product.displayPrice, period: SubL.Period.years(period.value))
+            case .month:
+                subline = period.value == 1
+                    ? SubL.Price.perMonth(product.displayPrice)
+                    : SubL.Price.perPeriod(product.displayPrice, period: SubL.Period.months(period.value))
+            case .week:
+                subline = period.value == 1
+                    ? SubL.Price.perWeek(product.displayPrice)
+                    : SubL.Price.perPeriod(product.displayPrice, period: SubL.Period.weeks(period.value))
+            case .day:
+                subline = period.value == 1
+                    ? SubL.Price.perDay(product.displayPrice)
+                    : SubL.Price.perPeriod(product.displayPrice, period: SubL.Period.days(period.value))
             @unknown default: break
             }
         }

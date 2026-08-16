@@ -265,6 +265,16 @@ public enum SubL {
             localizedFormat("subscription.price.per_day", price)
         }
 
+        /// A localized price followed by an arbitrary localized billing period.
+        public static func perPeriod(_ price: String, period: String) -> String {
+            localizedFormat("subscription.price.per_period", price, period)
+        }
+
+        /// Localized printf format used by configurable paywall badges.
+        public static var savePercentFormat: String {
+            localized("subscription.price.save_percent")
+        }
+
         /// "Save %d%%" / "节省 %d%%"
         public static func savePercent(_ percent: Int) -> String {
             localizedFormat("subscription.price.save_percent", percent)
