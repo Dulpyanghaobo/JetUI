@@ -1,0 +1,111 @@
+/* 
+  Subscription.strings (Vietnamese)
+  JetUI Subscription Module
+  
+  Tất cả chuỗi bản địa hóa cho tính năng đăng ký/tường phí.
+*/
+
+// MARK: - Paywall Titles
+"subscription.title.unlock_pro" = "Mở khóa Pro";
+"subscription.title.start_trial" = "Bắt đầu dùng thử miễn phí";
+"subscription.title.how_trial_works" = "Dùng thử miễn phí hoạt động thế nào";
+"subscription.title.unlimited_access" = "Mở khóa quyền truy cập không giới hạn";
+
+// MARK: - Subscription Period Labels
+"subscription.period.yearly" = "Hằng năm";
+"subscription.period.monthly" = "Hằng tháng";
+"subscription.period.weekly" = "Hằng tuần";
+"subscription.period.daily" = "Hằng ngày";
+"subscription.period.lifetime" = "Trọn đời";
+"subscription.period.every_week" = "Mỗi tuần";
+"subscription.period.every_year" = "Mỗi năm";
+"subscription.period.months_format" = "%d tháng";
+"subscription.period.weeks_format" = "%d tuần";
+"subscription.period.days_format" = "%d ngày";
+"subscription.period.years_format" = "%d năm";
+
+// MARK: - Trial Related
+"subscription.trial.free_trial" = "Dùng thử miễn phí";
+"subscription.trial.day_free_trial" = "Dùng thử miễn phí %d ngày";
+"subscription.trial.week_free_trial" = "Dùng thử miễn phí %d tuần";
+"subscription.trial.month_free_trial" = "Dùng thử miễn phí %d tháng";
+"subscription.trial.days_free" = "Miễn phí %d ngày";
+"subscription.trial.three_day_title" = "Dùng thử miễn phí 3 ngày";
+"subscription.trial.three_day_cancel_anytime" = "Dùng thử miễn phí 3 ngày, hủy bất cứ lúc nào";
+"subscription.trial.free_then_price" = "Miễn phí %@, sau đó %@";
+"subscription.trial.free_trial_period" = "Dùng thử miễn phí %@";
+"subscription.trial.today_full_access" = "Hôm nay – Toàn quyền truy cập";
+"subscription.trial.day5_reminder" = "Ngày 5 – Nhắc nhở dùng thử";
+"subscription.trial.day7_ends" = "Ngày 7 – Kết thúc dùng thử";
+"subscription.trial.starts_features" = "Bắt đầu chụp với các tính năng Pro";
+"subscription.trial.remind_before_ends" = "Chúng tôi sẽ nhắc bạn trước khi thời gian dùng thử kết thúc";
+"subscription.trial.subscription_starts" = "Gói đăng ký bắt đầu";
+
+// MARK: - Buttons
+"subscription.button.continue" = "Tiếp tục";
+"subscription.button.restore" = "Khôi phục";
+"subscription.button.restore_purchases" = "Khôi phục giao dịch mua";
+"subscription.button.processing" = "Đang xử lý...";
+"subscription.button.retry" = "Thử lại";
+"subscription.button.loading" = "Đang tải...";
+
+// MARK: - Price Display
+"subscription.price.per_year" = "%@/năm";
+"subscription.price.per_month" = "%@/tháng";
+"subscription.price.per_week" = "%@/tuần";
+"subscription.price.per_day" = "%@/ngày";
+"subscription.price.per_period" = "%@/%@";
+"subscription.price.save_percent" = "Tiết kiệm %d%%";
+"subscription.price.best_value" = "Ưu đãi tốt nhất";
+"subscription.price.most_popular" = "Phổ biến nhất";
+
+// MARK: - Legal
+"subscription.legal.privacy_policy" = "Chính sách quyền riêng tư";
+"subscription.legal.terms_of_service" = "Điều khoản dịch vụ";
+"subscription.legal.terms_conditions" = "Điều khoản và điều kiện";
+"subscription.legal.cancel_anytime" = "Hủy bất cứ lúc nào";
+"subscription.legal.auto_renewal_tip" = "Tự động gia hạn. Hủy bất cứ lúc nào.";
+"subscription.legal.lifetime_tip" = "Mua một lần, sử dụng trọn đời.";
+
+// MARK: - Error Messages
+"subscription.error.load_failed" = "Không thể tải sản phẩm";
+"subscription.error.purchase_failed" = "Giao dịch mua không thành công";
+"subscription.error.purchase_cancelled" = "Giao dịch mua đã bị hủy";
+"subscription.error.purchase_pending" = "Giao dịch mua đang chờ xử lý";
+"subscription.error.unknown" = "Đã xảy ra lỗi không xác định";
+"subscription.error.no_products" = "Hiện không có sản phẩm nào";
+"subscription.error.no_subscription_found" = "Không tìm thấy gói đăng ký đang hoạt động";
+"subscription.error.restore_failed" = "Không thể khôi phục giao dịch mua";
+"subscription.error.purchase_recovery_title" = "Không thể hoàn tất giao dịch mua của bạn";
+"subscription.error.purchase_network_recovery" = "Hãy kiểm tra kết nối rồi thử lại hoặc khôi phục nếu bạn đã mua.";
+"subscription.error.purchase_store_recovery" = "App Store hiện không khả dụng. Hãy thử lại sau hoặc khôi phục nếu bạn đã mua.";
+"subscription.error.purchase_configuration_recovery" = "Hiện không có sản phẩm để mua. Hãy thử lại hoặc khôi phục nếu bạn đã mua.";
+"subscription.error.purchase_generic_recovery" = "Hãy thử lại hoặc khôi phục giao dịch mua nếu bạn đã mở khóa Pro.";
+"subscription.error.purchase_pending_title" = "Giao dịch mua đang chờ xử lý";
+"subscription.error.purchase_pending_recovery" = "Apple vẫn đang xử lý giao dịch mua này. Bạn có thể thử lại sau hoặc khôi phục sau khi giao dịch hoàn tất.";
+
+// MARK: - Benefits (Common)
+"subscription.benefit.unlimited_access" = "Truy cập không giới hạn";
+"subscription.benefit.no_ads" = "Không quảng cáo";
+"subscription.benefit.premium_features" = "Tính năng cao cấp";
+"subscription.benefit.priority_support" = "Hỗ trợ ưu tiên";
+"subscription.benefit.cloud_sync" = "Đồng bộ đám mây";
+"subscription.benefit.unlimited_templates" = "Mẫu không giới hạn";
+"subscription.benefit.unlimited_timestamps" = "Dấu thời gian không giới hạn";
+"subscription.benefit.pro_filters" = "Bộ lọc chuyên nghiệp";
+"subscription.benefit.4k_export" = "Xuất 4K";
+"subscription.benefit.watermark_free" = "Không có hình mờ";
+"subscription.benefit.all_premium" = "Tất cả tính năng cao cấp";
+
+// MARK: - Status Messages
+"subscription.status.active" = "Đang hoạt động";
+"subscription.status.expired" = "Đã hết hạn";
+"subscription.status.trial_active" = "Đang dùng thử";
+"subscription.status.expires_on" = "Hết hạn vào %@";
+"subscription.status.renews_on" = "Gia hạn vào %@";
+
+// MARK: - Accessibility
+"subscription.accessibility.close_button" = "Đóng màn hình nâng cấp";
+"subscription.accessibility.restore_button" = "Khôi phục các giao dịch mua trước đây";
+"subscription.accessibility.plan_selected" = "Đã chọn gói %@";
+"subscription.accessibility.price_option" = "%@, %@";

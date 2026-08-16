@@ -54,6 +54,7 @@
 "subscription.price.per_month" = "%@/month";
 "subscription.price.per_week" = "%@/week";
 "subscription.price.per_day" = "%@/day";
+"subscription.price.per_period" = "%@/%@";
 "subscription.price.save_percent" = "Save %d%%";
 "subscription.price.best_value" = "Best Value";
 "subscription.price.most_popular" = "Most Popular";

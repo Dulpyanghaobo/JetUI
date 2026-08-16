@@ -54,6 +54,7 @@
 "subscription.price.per_month" = "%@/月";
 "subscription.price.per_week" = "%@/周";
 "subscription.price.per_day" = "%@/天";
+"subscription.price.per_period" = "%@/%@";
 "subscription.price.save_percent" = "节省 %d%%";
 "subscription.price.best_value" = "最佳优惠";
 "subscription.price.most_popular" = "最受欢迎";
